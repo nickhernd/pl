@@ -1,79 +1,227 @@
 import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AnalizadorLexico {
-    private RandomAccessFile input;
-    private int row = 1;
-    private int column = 1;
-    private char currentChar;
 
-    public AnalizadorLexico(RandomAccessFile input) {
-        this.input = input;
-        try {
-            readNextChar(); // Initialize currentChar
-        } catch (IOException e) {
-            System.err.println("Error initializing lexical analyzer: " + e.getMessage());
-            System.exit(-1);
-        }
+    private RandomAccessFile entrada;
+    private int fila = 1;
+    private int columna = 0;
+    private char charActual = ' '; 
+    private boolean eof = false;
+    private Map<String, Integer> palabrasReservadas;
+
+    public AnalizadorLexico(RandomAccessFile entrada) {
+        this.entrada = entrada;
+        // Mapeo basado en TUS constantes de Token.java
+        this.palabrasReservadas = new HashMap<>();
+        palabrasReservadas.put("class", Token.CLASS);
+        palabrasReservadas.put("fun", Token.FUN);
+        palabrasReservadas.put("int", Token.INT);
+        palabrasReservadas.put("float", Token.FLOAT);
+        palabrasReservadas.put("if", Token.IF);
+        palabrasReservadas.put("else", Token.ELSE);
+        palabrasReservadas.put("fi", Token.FI);
+        palabrasReservadas.put("print", Token.PRINT);
     }
 
-    private void readNextChar() throws IOException {
-        int charCode = input.read();
-        if (charCode == -1) {
-            currentChar = (char) -1; // Represents EOF
-        } else {
-            currentChar = (char) charCode;
-            if (currentChar == '
-') {
-                row++;
-                column = 1;
-            } else {
-                column++;
+    private char leerChar() {
+        try {
+            int byteRead = entrada.read();
+            if (byteRead == -1) {
+                eof = true;
+                return '\0';
             }
+            char c = (char) byteRead;
+            if (c == '\n') {
+                fila++;
+                columna = 0; 
+            } else if (c == '\t') {
+                columna++; 
+            } else {
+                columna++;
+            }
+            return c;
+        } catch (IOException e) {
+            System.err.println("Error de E/S");
+            System.exit(-1);
+        }
+        return '\0';
+    }
+
+    private void retroceder() {
+        try {
+            if (!eof && entrada.getFilePointer() > 0) {
+                entrada.seek(entrada.getFilePointer() - 1);
+                columna--; 
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public Token siguienteToken() {
-        // This is a placeholder. The actual implementation will involve
-        // reading characters, handling whitespace, comments, and
-        // recognizing different token types based on the regular expressions
-        // provided in the plp1.pdf document.
-        // For now, it will just return EOF if the end of file is reached.
-        if (currentChar == (char) -1) {
-            return Token.EOF;
-        }
-
-        // Skip whitespace (spaces, tabs, newlines)
-        while (Character.isWhitespace(currentChar)) {
-            try {
-                readNextChar();
-            } catch (IOException e) {
-                System.err.println("Error reading char: " + e.getMessage());
-                System.exit(-1);
+        Token t = new Token();
+        
+        // 1. Consumir blancos y comentarios
+        while (true) {
+            if (charActual == '\0' && eof) {
+                t.tipo = Token.EOF;
+                return t;
             }
-            if (currentChar == (char) -1) {
-                return Token.EOF;
+            
+            if (charActual <= ' ') { // Blancos, saltos, tabs
+                charActual = leerChar();
+                continue;
             }
+            
+            // Logica de comentarios con '/'
+            if (charActual == '/') {
+                char sig = leerChar();
+                if (sig == '*') {
+                    boolean cerrado = false;
+                    while (!eof) {
+                        char c = leerChar();
+                        if (c == '*') {
+                            char c2 = leerChar();
+                            if (c2 == '/') {
+                                cerrado = true;
+                                charActual = leerChar(); 
+                                break;
+                            } else {
+                                retroceder(); 
+                            }
+                        }
+                    }
+                    if (!cerrado && eof) {
+                        System.err.println("Error lexico: fin de fichero inesperado"); // Mensaje PDF 
+                        System.exit(-1);
+                    }
+                    continue; 
+                } else {
+                    retroceder(); 
+                    // No es comentario, el '/' se procesará abajo como OPMUL
+                    break; 
+                }
+            }
+            break; 
         }
 
-        // Placeholder for actual token recognition logic
-        // This will be expanded in later steps.
-        // For now, let's just consume one character and return an ID token as a very basic placeholder
-        // or EOF if no more characters are found.
-        if (currentChar == (char) -1) {
-            return Token.EOF;
+        if (eof) {
+            t.tipo = Token.EOF;
+            return t;
         }
 
-        char firstChar = currentChar;
-        try {
-            readNextChar();
-        } catch (IOException e) {
-            System.err.println("Error reading char: " + e.getMessage());
-            System.exit(-1);
+        t.fila = fila;
+        t.columna = columna; 
+
+        // 2. Automata principal mapeado a TU Token.java
+        switch (charActual) {
+            case '(': t.tipo = Token.PARI; t.lexema = "("; charActual = leerChar(); break;
+            case ')': t.tipo = Token.PARD; t.lexema = ")"; charActual = leerChar(); break;
+            case '{': t.tipo = Token.LBRA; t.lexema = "{"; charActual = leerChar(); break;
+            case '}': t.tipo = Token.RBRA; t.lexema = "}"; charActual = leerChar(); break;
+            case ';': t.tipo = Token.PYC;  t.lexema = ";"; charActual = leerChar(); break;
+            case ':': t.tipo = Token.DOSP; t.lexema = ":"; charActual = leerChar(); break;
+            
+            case '+': 
+            case '-': 
+                t.tipo = Token.OPAS; t.lexema = String.valueOf(charActual); charActual = leerChar(); break;
+            
+            case '*': 
+            case '/': 
+                t.tipo = Token.OPMUL; t.lexema = String.valueOf(charActual); charActual = leerChar(); break;
+            
+            case '=': 
+                char sig = leerChar();
+                if (sig == '=') {
+                   t.tipo = Token.OPREL; t.lexema = "=="; charActual = leerChar();
+                } else {
+                   retroceder();
+                   t.tipo = Token.ASIG; t.lexema = "="; charActual = leerChar();
+                }
+                break;
+
+            case '<':
+                sig = leerChar();
+                if (sig == '=') {
+                   t.tipo = Token.OPREL; t.lexema = "<="; charActual = leerChar();
+                } else {
+                   retroceder();
+                   t.tipo = Token.OPREL; t.lexema = "<"; charActual = leerChar();
+                }
+                break;
+                
+            case '>':
+                sig = leerChar();
+                if (sig == '=') {
+                   t.tipo = Token.OPREL; t.lexema = ">="; charActual = leerChar();
+                } else {
+                   retroceder();
+                   t.tipo = Token.OPREL; t.lexema = ">"; charActual = leerChar();
+                }
+                break;
+                
+            case '!':
+                sig = leerChar();
+                if (sig == '=') {
+                   t.tipo = Token.OPREL; t.lexema = "!="; charActual = leerChar();
+                } else {
+                   errorLexico(t.fila, t.columna, '!');
+                }
+                break;
+
+            default:
+                if (Character.isLetter(charActual)) {
+                    StringBuilder sb = new StringBuilder();
+                    while (Character.isLetterOrDigit(charActual)) {
+                        sb.append(charActual);
+                        charActual = leerChar();
+                    }
+                    String lex = sb.toString();
+                    t.lexema = lex;
+                    if (palabrasReservadas.containsKey(lex)) {
+                        t.tipo = palabrasReservadas.get(lex);
+                    } else {
+                        t.tipo = Token.ID;
+                    }
+                } else if (Character.isDigit(charActual)) {
+                    StringBuilder sb = new StringBuilder();
+                    while (Character.isDigit(charActual)) {
+                        sb.append(charActual);
+                        charActual = leerChar();
+                    }
+                    if (charActual == '.') {
+                        char next = leerChar();
+                        retroceder();
+                        if (Character.isDigit(next)) {
+                            // It's a float
+                            sb.append(charActual);
+                            charActual = leerChar(); // consume dot
+                            
+                            while(Character.isDigit(charActual)) {
+                                sb.append(charActual);
+                                charActual = leerChar();
+                            }
+                            t.tipo = Token.NUMREAL;
+                        } else {
+                            // It's an integer
+                            t.tipo = Token.NUMENTERO;
+                        }
+                    } else {
+                        t.tipo = Token.NUMENTERO;
+                    }
+                    t.lexema = sb.toString();
+                } else {
+                    errorLexico(t.fila, t.columna, charActual);
+                }
         }
-        // In a real scenario, you would build lexemes and determine token type here.
-        // For demonstration, let's just return a generic ID token for any non-whitespace char.
-        // This needs to be replaced with proper lexical analysis.
-        return Token.id;
+        return t;
+    }
+
+    private void errorLexico(int f, int c, char car) {
+        System.err.println("Error lexico (" + f + "," + c + "): caracter '" + car + "' incorrecto");
+        System.exit(-1);
     }
 }
