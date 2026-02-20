@@ -28,9 +28,7 @@ public class AnalizadorSintacticoDR {
         }
     }
 
-    // Algoritmo para mostrar errores en el orden que exige el PDF (Independiente de los IDs del Token.java)
     private void errorSintactico(int... tokensEsperados) {
-        // Mapeo manual del orden visual exigido por el PDF
         int[] ordenPDF = {
             Token.CLASS, Token.ID, Token.LBRA, Token.RBRA, Token.FUN, Token.PYC,
             Token.INT, Token.FLOAT, Token.ASIG, Token.IF, Token.DOSP, Token.ELSE,
@@ -39,21 +37,20 @@ public class AnalizadorSintacticoDR {
         };
 
         if (tokenActual.tipo == Token.EOF) {
-             System.out.print("Error sintactico: encontrado fin de fichero, esperaba");
+             System.err.print("Error sintactico: encontrado fin de fichero, esperaba");
         } else {
-             System.out.print("Error sintactico (" + tokenActual.fila + "," + tokenActual.columna + "): encontrado '" + tokenActual.lexema + "', esperaba");
+             System.err.print("Error sintactico (" + tokenActual.fila + "," + tokenActual.columna + "): encontrado '" + tokenActual.lexema + "', esperaba");
         }
         
-        // Intersección de conjuntos: (TokensEsperados U OrdenPDF)
         for (int tipoOrden : ordenPDF) {
             for (int esperado : tokensEsperados) {
                 if (tipoOrden == esperado) {
-                    System.out.print(" " + Token.nombreToken.get(tipoOrden));
+                    System.err.print(" " + Token.nombreToken.get(tipoOrden));
                     break;
                 }
             }
         }
-        System.out.println();
+        System.err.println(" ");
         System.exit(-1);
     }
 
@@ -61,9 +58,7 @@ public class AnalizadorSintacticoDR {
         reglas.append(n).append(" ");
     }
 
-    // --- REGLAS GRAMÁTICALES (LL1) ---
-
-    // 1. S -> class id { M }
+    // 1. S -> class id lbra M rbra
     public void S() {
         if (tokenActual.tipo == Token.CLASS) {
             regla(1);
@@ -78,22 +73,28 @@ public class AnalizadorSintacticoDR {
     }
 
     // 2. M -> Fun M
-    // 3. M -> lambda
+    // 3. M -> S M
+    // 4. M -> epsilon
     public void M() {
         if (tokenActual.tipo == Token.FUN) {
             regla(2);
             Fun();
             M();
-        } 
-        // Follow(M) = { } } -> RBRA
-        else if (tokenActual.tipo == Token.RBRA) {
+        } else if (tokenActual.tipo == Token.CLASS) {
             regla(3);
+            S();
+            M();
+        } else if (tokenActual.tipo == Token.RBRA || tokenActual.tipo == Token.LBRA || 
+                   tokenActual.tipo == Token.ID || tokenActual.tipo == Token.IF || 
+                   tokenActual.tipo == Token.PRINT || tokenActual.tipo == Token.INT || 
+                   tokenActual.tipo == Token.FLOAT) {
+            regla(4);
         } else {
-            errorSintactico(Token.FUN, Token.RBRA);
+            errorSintactico(Token.FUN, Token.CLASS, Token.RBRA, Token.LBRA, Token.ID, Token.IF, Token.PRINT, Token.INT, Token.FLOAT);
         }
     }
 
-    // 5. Fun -> fun id A { M Cod }
+    // 5. Fun -> fun id A lbra M Cod rbra
     public void Fun() {
         if (tokenActual.tipo == Token.FUN) {
             regla(5);
@@ -110,27 +111,28 @@ public class AnalizadorSintacticoDR {
     }
 
     // 6. A -> DV Ap
+    // 35. A -> epsilon
     public void A() {
         if (tokenActual.tipo == Token.INT || tokenActual.tipo == Token.FLOAT) {
             regla(6);
             DV();
             Ap();
+        } else if (tokenActual.tipo == Token.LBRA) {
+            regla(35);
         } else {
-            errorSintactico(Token.INT, Token.FLOAT);
+            errorSintactico(Token.INT, Token.FLOAT, Token.LBRA);
         }
     }
 
-    // 7. Ap -> ; DV Ap
-    // 8. Ap -> lambda
+    // 7. Ap -> pyc DV Ap
+    // 8. Ap -> epsilon
     public void Ap() {
         if (tokenActual.tipo == Token.PYC) {
             regla(7);
             emparejar(Token.PYC);
             DV();
             Ap();
-        } 
-        // Follow(Ap) = { { } -> LBRA
-        else if (tokenActual.tipo == Token.LBRA) {
+        } else if (tokenActual.tipo == Token.LBRA) {
             regla(8);
         } else {
             errorSintactico(Token.PYC, Token.LBRA);
@@ -162,63 +164,66 @@ public class AnalizadorSintacticoDR {
         }
     }
 
-    // 11. Cod -> I Codp
+    // 12. Cod -> I Codp
     public void Cod() {
         if (tokenActual.tipo == Token.LBRA || tokenActual.tipo == Token.ID || 
-            tokenActual.tipo == Token.IF || tokenActual.tipo == Token.PRINT) {
-            regla(11);
+            tokenActual.tipo == Token.IF || tokenActual.tipo == Token.PRINT || 
+            tokenActual.tipo == Token.INT || tokenActual.tipo == Token.FLOAT) {
+            regla(12);
             I();
             Codp();
         } else {
-            errorSintactico(Token.LBRA, Token.ID, Token.IF, Token.PRINT);
+            errorSintactico(Token.LBRA, Token.ID, Token.IF, Token.PRINT, Token.INT, Token.FLOAT);
         }
     }
 
-    // 13. Codp -> ; I Codp
-    // 14. Codp -> lambda
+    // 13. Codp -> pyc I Codp
+    // 14. Codp -> epsilon
     public void Codp() {
         if (tokenActual.tipo == Token.PYC) {
             regla(13);
             emparejar(Token.PYC);
             I();
             Codp();
-        } 
-        // Follow(Codp) = { } } -> RBRA
-        else if (tokenActual.tipo == Token.RBRA) {
+        } else if (tokenActual.tipo == Token.RBRA) {
             regla(14);
         } else {
             errorSintactico(Token.PYC, Token.RBRA);
         }
     }
 
-    // 15. I -> { Cod }
-    // 16. I -> id = Expr
-    // 17. I -> if Expr : I Ip
-    // 18. I -> print Expr
+    // 16. I -> lbra Cod rbra
+    // 17. I -> id asig Expr
+    // 18. I -> if Expr dosp I Ip
+    // 21. I -> print Expr
+    // 15. I -> DV
     public void I() {
         if (tokenActual.tipo == Token.LBRA) {
-            regla(15);
+            regla(16);
             emparejar(Token.LBRA);
             Cod();
             emparejar(Token.RBRA);
         } else if (tokenActual.tipo == Token.ID) {
-            regla(16);
+            regla(17);
             emparejar(Token.ID);
             emparejar(Token.ASIG);
             Expr();
         } else if (tokenActual.tipo == Token.IF) {
-            regla(17);
+            regla(18);
             emparejar(Token.IF);
             Expr();
             emparejar(Token.DOSP);
             I();
             Ip();
         } else if (tokenActual.tipo == Token.PRINT) {
-            regla(18);
+            regla(21);
             emparejar(Token.PRINT);
             Expr();
+        } else if (tokenActual.tipo == Token.INT || tokenActual.tipo == Token.FLOAT) {
+            regla(15);
+            DV();
         } else {
-            errorSintactico(Token.LBRA, Token.ID, Token.IF, Token.PRINT);
+            errorSintactico(Token.LBRA, Token.ID, Token.IF, Token.PRINT, Token.INT, Token.FLOAT);
         }
     }
 
@@ -238,11 +243,11 @@ public class AnalizadorSintacticoDR {
         }
     }
 
-    // 21. Expr -> E Exprp
+    // 22. Expr -> E Exprp
     public void Expr() {
         if (tokenActual.tipo == Token.ID || tokenActual.tipo == Token.NUMENTERO || 
             tokenActual.tipo == Token.NUMREAL || tokenActual.tipo == Token.PARI) {
-            regla(21);
+            regla(22);
             E();
             Exprp();
         } else {
@@ -250,29 +255,27 @@ public class AnalizadorSintacticoDR {
         }
     }
 
-    // 22. Exprp -> oprel E
-    // 23. Exprp -> lambda
+    // 23. Exprp -> oprel E
+    // 24. Exprp -> epsilon
     public void Exprp() {
         if (tokenActual.tipo == Token.OPREL) {
-            regla(22);
+            regla(23);
             emparejar(Token.OPREL);
             E();
-        } 
-        else if (tokenActual.tipo == Token.PARD || tokenActual.tipo == Token.PYC || 
-                 tokenActual.tipo == Token.DOSP || tokenActual.tipo == Token.ELSE || 
-                 tokenActual.tipo == Token.FI || tokenActual.tipo == Token.PRINT || 
-                 tokenActual.tipo == Token.RBRA) {
-            regla(23);
+        } else if (tokenActual.tipo == Token.DOSP || tokenActual.tipo == Token.PARD || 
+                   tokenActual.tipo == Token.PYC || tokenActual.tipo == Token.RBRA || 
+                   tokenActual.tipo == Token.ELSE || tokenActual.tipo == Token.FI) {
+            regla(24);
         } else {
-            errorSintactico(Token.OPREL, Token.PARD, Token.PYC, Token.DOSP, Token.ELSE, Token.FI, Token.PRINT, Token.RBRA);
+            errorSintactico(Token.OPREL, Token.DOSP, Token.PARD, Token.PYC, Token.RBRA, Token.ELSE, Token.FI);
         }
     }
 
-    // 24. E -> T Ep
+    // 25. E -> T Ep
     public void E() {
         if (tokenActual.tipo == Token.ID || tokenActual.tipo == Token.NUMENTERO || 
             tokenActual.tipo == Token.NUMREAL || tokenActual.tipo == Token.PARI) {
-            regla(24);
+            regla(25);
             T();
             Ep();
         } else {
@@ -280,30 +283,29 @@ public class AnalizadorSintacticoDR {
         }
     }
 
-    // 25. Ep -> opas T Ep
-    // 26. Ep -> lambda
+    // 26. Ep -> opas T Ep
+    // 27. Ep -> epsilon
     public void Ep() {
         if (tokenActual.tipo == Token.OPAS) {
-            regla(25);
+            regla(26);
             emparejar(Token.OPAS);
             T();
             Ep();
-        } 
-        else if (tokenActual.tipo == Token.OPREL || tokenActual.tipo == Token.PARD || 
-                 tokenActual.tipo == Token.PYC || tokenActual.tipo == Token.DOSP || 
-                 tokenActual.tipo == Token.ELSE || tokenActual.tipo == Token.FI || 
-                 tokenActual.tipo == Token.PRINT || tokenActual.tipo == Token.RBRA) {
-            regla(26);
+        } else if (tokenActual.tipo == Token.OPREL || tokenActual.tipo == Token.DOSP || 
+                   tokenActual.tipo == Token.PARD || tokenActual.tipo == Token.PYC || 
+                   tokenActual.tipo == Token.RBRA || tokenActual.tipo == Token.ELSE || 
+                   tokenActual.tipo == Token.FI) {
+            regla(27);
         } else {
-            errorSintactico(Token.OPAS, Token.OPREL, Token.PARD, Token.PYC, Token.DOSP, Token.ELSE, Token.FI, Token.PRINT, Token.RBRA);
+            errorSintactico(Token.OPAS, Token.OPREL, Token.DOSP, Token.PARD, Token.PYC, Token.RBRA, Token.ELSE, Token.FI);
         }
     }
 
-    // 27. T -> F Tp
+    // 28. T -> F Tp
     public void T() {
         if (tokenActual.tipo == Token.ID || tokenActual.tipo == Token.NUMENTERO || 
             tokenActual.tipo == Token.NUMREAL || tokenActual.tipo == Token.PARI) {
-            regla(27);
+            regla(28);
             F();
             Tp();
         } else {
@@ -311,42 +313,40 @@ public class AnalizadorSintacticoDR {
         }
     }
 
-    // 28. Tp -> opmul F Tp
-    // 29. Tp -> lambda
+    // 29. Tp -> opmul F Tp
+    // 30. Tp -> epsilon
     public void Tp() {
         if (tokenActual.tipo == Token.OPMUL) {
-            regla(28);
+            regla(29);
             emparejar(Token.OPMUL);
             F();
             Tp();
-        } 
-        else if (tokenActual.tipo == Token.OPAS || tokenActual.tipo == Token.OPREL || 
-                 tokenActual.tipo == Token.PARD || tokenActual.tipo == Token.PYC || 
-                 tokenActual.tipo == Token.DOSP || tokenActual.tipo == Token.ELSE || 
-                 tokenActual.tipo == Token.FI || tokenActual.tipo == Token.PRINT || 
-                 tokenActual.tipo == Token.RBRA) {
-            regla(29);
+        } else if (tokenActual.tipo == Token.OPAS || tokenActual.tipo == Token.OPREL || 
+                   tokenActual.tipo == Token.DOSP || tokenActual.tipo == Token.PARD || 
+                   tokenActual.tipo == Token.PYC || tokenActual.tipo == Token.RBRA || 
+                   tokenActual.tipo == Token.ELSE || tokenActual.tipo == Token.FI) {
+            regla(30);
         } else {
-            errorSintactico(Token.OPMUL, Token.OPAS, Token.OPREL, Token.PARD, Token.PYC, Token.DOSP, Token.ELSE, Token.FI, Token.PRINT, Token.RBRA);
+            errorSintactico(Token.OPMUL, Token.OPAS, Token.OPREL, Token.DOSP, Token.PARD, Token.PYC, Token.RBRA, Token.ELSE, Token.FI);
         }
     }
 
-    // 30. F -> id
-    // 31. F -> numentero
-    // 32. F -> numreal
-    // 33. F -> ( Expr )
+    // 31. F -> id
+    // 32. F -> numentero
+    // 33. F -> numreal
+    // 34. F -> pari Expr pard
     public void F() {
         if (tokenActual.tipo == Token.ID) {
-            regla(30);
+            regla(31);
             emparejar(Token.ID);
         } else if (tokenActual.tipo == Token.NUMENTERO) {
-            regla(31);
+            regla(32);
             emparejar(Token.NUMENTERO);
         } else if (tokenActual.tipo == Token.NUMREAL) {
-            regla(32);
+            regla(33);
             emparejar(Token.NUMREAL);
         } else if (tokenActual.tipo == Token.PARI) {
-            regla(33);
+            regla(34);
             emparejar(Token.PARI);
             Expr();
             emparejar(Token.PARD);

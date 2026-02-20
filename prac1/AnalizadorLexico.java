@@ -8,13 +8,14 @@ public class AnalizadorLexico {
     private RandomAccessFile entrada;
     private int fila = 1;
     private int columna = 0;
+    private int tokenFila;
+    private int tokenColumna;
     private char charActual = ' '; 
     private boolean eof = false;
     private Map<String, Integer> palabrasReservadas;
 
     public AnalizadorLexico(RandomAccessFile entrada) {
         this.entrada = entrada;
-        // Mapeo basado en TUS constantes de Token.java
         this.palabrasReservadas = new HashMap<>();
         palabrasReservadas.put("class", Token.CLASS);
         palabrasReservadas.put("fun", Token.FUN);
@@ -24,6 +25,9 @@ public class AnalizadorLexico {
         palabrasReservadas.put("else", Token.ELSE);
         palabrasReservadas.put("fi", Token.FI);
         palabrasReservadas.put("print", Token.PRINT);
+        
+        // Leer el primer caracter
+        charActual = leerChar();
     }
 
     private char leerChar() {
@@ -34,13 +38,10 @@ public class AnalizadorLexico {
                 return '\0';
             }
             char c = (char) byteRead;
+            columna++;
             if (c == '\n') {
                 fila++;
                 columna = 0; 
-            } else if (c == '\t') {
-                columna++; 
-            } else {
-                columna++;
             }
             return c;
         } catch (IOException e) {
@@ -50,11 +51,17 @@ public class AnalizadorLexico {
         return '\0';
     }
 
-    private void retroceder() {
+    private void retroceder(char c) {
+        if (c == '\0' && eof) return;
         try {
-            if (!eof && entrada.getFilePointer() > 0) {
-                entrada.seek(entrada.getFilePointer() - 1);
-                columna--; 
+            entrada.seek(entrada.getFilePointer() - 1);
+            if (c == '\n') {
+                fila--;
+                // La columna es difícil de recuperar exactamente sin leer atrás, 
+                // pero para retract en Lexico suele bastar con el puntero de archivo.
+                // En este lenguaje la columna en retract solo se usa para el siguiente token.
+            } else {
+                columna--;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -62,166 +69,309 @@ public class AnalizadorLexico {
     }
 
     public Token siguienteToken() {
+        int estado = 0;
+        StringBuilder lexema = new StringBuilder();
         Token t = new Token();
-        
-        // 1. Consumir blancos y comentarios
+
         while (true) {
-            if (charActual == '\0' && eof) {
-                t.tipo = Token.EOF;
-                return t;
-            }
-            
-            if (charActual <= ' ') { // Blancos, saltos, tabs
-                charActual = leerChar();
-                continue;
-            }
-            
-            // Logica de comentarios con '/'
-            if (charActual == '/') {
-                char sig = leerChar();
-                if (sig == '*') {
-                    boolean cerrado = false;
-                    while (!eof) {
-                        char c = leerChar();
-                        if (c == '*') {
-                            char c2 = leerChar();
-                            if (c2 == '/') {
-                                cerrado = true;
-                                charActual = leerChar(); 
-                                break;
-                            } else {
-                                retroceder(); 
-                            }
-                        }
+            switch (estado) {
+                case 0: // q0
+                    if (eof && charActual == '\0') {
+                        t.tipo = Token.EOF;
+                        return t;
                     }
-                    if (!cerrado && eof) {
-                        System.err.println("Error lexico: fin de fichero inesperado"); // Mensaje PDF 
-                        System.exit(-1);
-                    }
-                    continue; 
-                } else {
-                    retroceder(); 
-                    // No es comentario, el '/' se procesará abajo como OPMUL
-                    break; 
-                }
-            }
-            break; 
-        }
-
-        if (eof) {
-            t.tipo = Token.EOF;
-            return t;
-        }
-
-        t.fila = fila;
-        t.columna = columna; 
-
-        // 2. Automata principal mapeado a TU Token.java
-        switch (charActual) {
-            case '(': t.tipo = Token.PARI; t.lexema = "("; charActual = leerChar(); break;
-            case ')': t.tipo = Token.PARD; t.lexema = ")"; charActual = leerChar(); break;
-            case '{': t.tipo = Token.LBRA; t.lexema = "{"; charActual = leerChar(); break;
-            case '}': t.tipo = Token.RBRA; t.lexema = "}"; charActual = leerChar(); break;
-            case ';': t.tipo = Token.PYC;  t.lexema = ";"; charActual = leerChar(); break;
-            case ':': t.tipo = Token.DOSP; t.lexema = ":"; charActual = leerChar(); break;
-            
-            case '+': 
-            case '-': 
-                t.tipo = Token.OPAS; t.lexema = String.valueOf(charActual); charActual = leerChar(); break;
-            
-            case '*': 
-            case '/': 
-                t.tipo = Token.OPMUL; t.lexema = String.valueOf(charActual); charActual = leerChar(); break;
-            
-            case '=': 
-                char sig = leerChar();
-                if (sig == '=') {
-                   t.tipo = Token.OPREL; t.lexema = "=="; charActual = leerChar();
-                } else {
-                   retroceder();
-                   t.tipo = Token.ASIG; t.lexema = "="; charActual = leerChar();
-                }
-                break;
-
-            case '<':
-                sig = leerChar();
-                if (sig == '=') {
-                   t.tipo = Token.OPREL; t.lexema = "<="; charActual = leerChar();
-                } else {
-                   retroceder();
-                   t.tipo = Token.OPREL; t.lexema = "<"; charActual = leerChar();
-                }
-                break;
-                
-            case '>':
-                sig = leerChar();
-                if (sig == '=') {
-                   t.tipo = Token.OPREL; t.lexema = ">="; charActual = leerChar();
-                } else {
-                   retroceder();
-                   t.tipo = Token.OPREL; t.lexema = ">"; charActual = leerChar();
-                }
-                break;
-                
-            case '!':
-                sig = leerChar();
-                if (sig == '=') {
-                   t.tipo = Token.OPREL; t.lexema = "!="; charActual = leerChar();
-                } else {
-                   errorLexico(t.fila, t.columna, '!');
-                }
-                break;
-
-            default:
-                if (Character.isLetter(charActual)) {
-                    StringBuilder sb = new StringBuilder();
-                    while (Character.isLetterOrDigit(charActual)) {
-                        sb.append(charActual);
+                    if (charActual <= ' ' && charActual != '\0') { // Blancos
                         charActual = leerChar();
+                        estado = 0;
+                    } else if (Character.isLetter(charActual)) {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 1;
+                    } else if (Character.isDigit(charActual)) {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 3;
+                    } else if (charActual == '=') {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 8;
+                    } else if (charActual == '<') {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 11;
+                    } else if (charActual == '>') {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 14;
+                    } else if (charActual == '!') {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 17;
+                    } else if (charActual == '/') {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 19;
+                    } else if ("+-*(){};:".indexOf(charActual) != -1) {
+                        tokenFila = fila;
+                        tokenColumna = columna;
+                        t.fila = tokenFila;
+                        t.columna = tokenColumna;
+                        t.lexema = String.valueOf(charActual);
+                        if (charActual == '+') t.tipo = Token.OPAS;
+                        else if (charActual == '-') t.tipo = Token.OPAS;
+                        else if (charActual == '*') t.tipo = Token.OPMUL;
+                        else if (charActual == '(') t.tipo = Token.PARI;
+                        else if (charActual == ')') t.tipo = Token.PARD;
+                        else if (charActual == '{') t.tipo = Token.LBRA;
+                        else if (charActual == '}') t.tipo = Token.RBRA;
+                        else if (charActual == ';') t.tipo = Token.PYC;
+                        else if (charActual == ':') t.tipo = Token.DOSP;
+                        charActual = leerChar();
+                        return t;
+                    } else {
+                        errorLexico(fila, columna, charActual);
                     }
-                    String lex = sb.toString();
-                    t.lexema = lex;
-                    if (palabrasReservadas.containsKey(lex)) {
-                        t.tipo = palabrasReservadas.get(lex);
+                    break;
+
+                case 1: // q1 (ID)
+                    if (Character.isLetterOrDigit(charActual)) {
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 1;
+                    } else {
+                        estado = 2;
+                    }
+                    break;
+
+                case 2: // q2 (ID Retract)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    if (palabrasReservadas.containsKey(t.lexema)) {
+                        t.tipo = palabrasReservadas.get(t.lexema);
                     } else {
                         t.tipo = Token.ID;
                     }
-                } else if (Character.isDigit(charActual)) {
-                    StringBuilder sb = new StringBuilder();
-                    while (Character.isDigit(charActual)) {
-                        sb.append(charActual);
+                    // No consumimos charActual, se queda para el siguiente q0
+                    return t;
+
+                case 3: // q3 (INT)
+                    if (Character.isDigit(charActual)) {
+                        lexema.append(charActual);
                         charActual = leerChar();
-                    }
-                    if (charActual == '.') {
-                        char next = leerChar();
-                        retroceder();
-                        if (Character.isDigit(next)) {
-                            // It's a float
-                            sb.append(charActual);
-                            charActual = leerChar(); // consume dot
-                            
-                            while(Character.isDigit(charActual)) {
-                                sb.append(charActual);
-                                charActual = leerChar();
-                            }
-                            t.tipo = Token.NUMREAL;
+                        estado = 3;
+                    } else if (charActual == '.') {
+                        char sig = leerChar();
+                        if (Character.isDigit(sig)) {
+                            lexema.append(charActual);
+                            lexema.append(sig);
+                            charActual = leerChar();
+                            estado = 6; // Ir directo a q6
                         } else {
-                            // It's an integer
-                            t.tipo = Token.NUMENTERO;
+                            retroceder(sig);
+                            estado = 4; // Aceptar entero
                         }
                     } else {
-                        t.tipo = Token.NUMENTERO;
+                        estado = 4;
                     }
-                    t.lexema = sb.toString();
-                } else {
-                    errorLexico(t.fila, t.columna, charActual);
-                }
+                    break;
+
+                case 4: // q4 (INT Retract)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.NUMENTERO;
+                    return t;
+
+                case 5: // q5 (Dote in FLOAT)
+                    if (Character.isDigit(charActual)) {
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 6;
+                    } else {
+                        // Error: esperado digito después de punto
+                        errorLexico(fila, columna, charActual);
+                    }
+                    break;
+
+                case 6: // q6 (FLOAT)
+                    if (Character.isDigit(charActual)) {
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 6;
+                    } else {
+                        estado = 7;
+                    }
+                    break;
+
+                case 7: // q7 (FLOAT Retract)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.NUMREAL;
+                    return t;
+
+                case 8: // q8 (=)
+                    if (charActual == '=') {
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 9;
+                    } else {
+                        estado = 10;
+                    }
+                    break;
+
+                case 9: // q9 (==)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.OPREL;
+                    return t;
+
+                case 10: // q10 (= Retract)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.ASIG;
+                    return t;
+
+                case 11: // q11 (<)
+                    if (charActual == '=') {
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 13;
+                    } else {
+                        estado = 12;
+                    }
+                    break;
+
+                case 12: // q12 (< Retract)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.OPREL;
+                    return t;
+
+                case 13: // q13 (<=)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.OPREL;
+                    return t;
+
+                case 14: // q14 (>)
+                    if (charActual == '=') {
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 16;
+                    } else {
+                        estado = 15;
+                    }
+                    break;
+
+                case 15: // q15 (> Retract)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.OPREL;
+                    return t;
+
+                case 16: // q16 (>=)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.OPREL;
+                    return t;
+
+                case 17: // q17 (!)
+                    if (charActual == '=') {
+                        lexema.append(charActual);
+                        charActual = leerChar();
+                        estado = 18;
+                    } else {
+                        // Error relacional: ! solo no es válido
+                        errorLexico(fila, columna, charActual);
+                    }
+                    break;
+
+                case 18: // q18 (!=)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.OPREL;
+                    return t;
+
+                case 19: // q19 (/)
+                    if (charActual == '*') {
+                        charActual = leerChar();
+                        estado = 20;
+                    } else {
+                        estado = 22;
+                    }
+                    break;
+
+                case 20: // q20 (Body of comment)
+                    if (eof && charActual == '\0') {
+                        System.err.println("Error lexico: fin de fichero inesperado");
+                        System.exit(-1);
+                    }
+                    if (charActual == '*') {
+                        charActual = leerChar();
+                        estado = 21;
+                    } else {
+                        charActual = leerChar();
+                        estado = 20;
+                    }
+                    break;
+
+                case 21: // q21 (Possible end of comment)
+                    if (eof && charActual == '\0') {
+                        System.err.println("Error lexico: fin de fichero inesperado");
+                        System.exit(-1);
+                    }
+                    if (charActual == '/') {
+                        charActual = leerChar();
+                        lexema.setLength(0); // Reiniciar lexema para volver a q0
+                        estado = 0;
+                    } else if (charActual == '*') {
+                        charActual = leerChar();
+                        estado = 21;
+                    } else {
+                        charActual = leerChar();
+                        estado = 20;
+                    }
+                    break;
+
+                case 22: // q22 (/ Retract)
+                    t.fila = tokenFila;
+                    t.columna = tokenColumna;
+                    t.lexema = lexema.toString();
+                    t.tipo = Token.OPMUL;
+                    return t;
+            }
         }
-        return t;
     }
 
     private void errorLexico(int f, int c, char car) {
-        System.err.println("Error lexico (" + f + "," + c + "): caracter '" + car + "' incorrecto");
+        if (eof && car == '\0') {
+             System.err.println("Error lexico: fin de fichero inesperado");
+        } else {
+             System.err.println("Error lexico (" + f + "," + c + "): caracter '" + car + "' incorrecto");
+        }
         System.exit(-1);
     }
 }
