@@ -1,0 +1,15 @@
+class Main {
+  fun main  {
+
+    float printando;
+
+    printando=1234-1+1+0.1-123.456+12.34;
+
+    {
+      int b;
+
+      b + 7    /* Error en '+', esperaba = **/
+    }
+  }
+}
+
