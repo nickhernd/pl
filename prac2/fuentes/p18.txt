@@ -1,0 +1,5 @@
+class SinLlaveApertura {
+  fun test
+    print 5
+  }
+}

@@ -1,0 +1,7 @@
+class Bloque {
+  fun test {
+    {
+      print 1
+    }
+  }
+}

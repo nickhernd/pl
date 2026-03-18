@@ -1,0 +1,5 @@
+class Operaciones {
+  fun suma {
+    print 10 + 20
+  }
+}

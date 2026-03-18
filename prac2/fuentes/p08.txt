@@ -1,0 +1,5 @@
+class Simple {
+  fun f {
+    print 42
+  }
+}

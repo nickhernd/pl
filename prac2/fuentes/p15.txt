@@ -1,0 +1,5 @@
+class Error {
+  fun test {
+    print @5
+  }
+}

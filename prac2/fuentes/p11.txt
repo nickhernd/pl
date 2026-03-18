@@ -1,0 +1,6 @@
+class Asignacion {
+  fun test {
+    int x ;
+    x = 5
+  }
+}

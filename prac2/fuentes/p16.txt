@@ -1,0 +1,6 @@
+class ComentarioAbierto {
+  fun test {
+    /* comentario sin cerrar
+    print 5
+  }
+}
