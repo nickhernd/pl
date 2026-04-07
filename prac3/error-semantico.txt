@@ -1,0 +1,20 @@
+  /// ----------------------------------------------------------------------------
+  private final int ERRYADECL=1,ERRNODECL=2,ERRTIPOS=3,ERRNOSIMPLE=4,ERRNOENTERO=5;
+  private void errorSemantico(int nerror,Token tok)
+  {
+    System.err.print("Error semantico ("+tok.fila+","+tok.columna+"): en '"+tok.lexema+"', ");
+    switch (nerror) {
+      case ERRYADECL: System.err.println("ya existe en este ambito");
+         break;
+      case ERRNODECL: System.err.println("no ha sido declarado");
+         break;
+      case ERRTIPOS: System.err.println("tipos incompatibles entero/real");
+         break;
+      case ERRNOSIMPLE: System.err.println("debe ser de tipo entero o real");
+         break;
+      case ERRNOENTERO: System.err.println("la expresion debe ser de tipo entero");
+         break;
+    }
+    System.exit(-1);
+  }
+
