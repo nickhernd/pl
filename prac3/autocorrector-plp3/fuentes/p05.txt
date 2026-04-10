@@ -1,0 +1,31 @@
+/* ámbito 1 (ámbito inicial, creado en el constructor) */
+
+class A  /* comienza ámbito 2 (padre=1) */   {
+
+  fun funcion   /* comienza ámbito 3 (padre=2) */  int a;float b {
+
+     print a+b
+
+  }   /* fin ámbito 3 (restaura ámbito 2) */
+
+  class B  /* comienza ámbito 4 (padre=2) */  {
+
+    fun otra /* comienza ámbito 5 (padre=4) */   float c {
+
+      float d;  /* c y d van en el mismo ámbito, el 5 */
+      print d*c;
+
+      if 2<d :
+        float e    /* e va al ámbito 5, con c y d */
+
+      else {   /* comienza ámbito 6 (padre=5) */
+        int b;
+        int d;
+        b = 2+77;
+        d = b+33;
+        print d+c
+      }       /* fin ámbito 6 (restaura ámbito 5) */
+      fi
+    }         /* fin ámbito 5 (restaura ámbito 4) */
+  }           /* fin ámbito 4 (restaura ámbito 2) */
+}             /* fin ámbito 2 (restaura ámbito 1) */
