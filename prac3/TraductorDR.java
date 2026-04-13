@@ -18,7 +18,6 @@ public class TraductorDR {
         if (tok.tipo == tipo) {
             tok = al.siguienteToken();
         } else {
-            // Error sintáctico (no requerido específicamente, pero bueno tenerlo)
             System.err.println("Error sintactico en fila " + tok.fila + ", columna " + tok.columna + ": se esperaba " + tipo + " y se encontro " + tok.tipo);
             System.exit(-1);
         }
@@ -43,75 +42,61 @@ public class TraductorDR {
         System.exit(-1);
     }
 
-    // S -> Clases
     public String S(String prefijo) {
         return Clases(prefijo);
     }
 
-    // Clases -> class ID { Miembros } Clases | empty
     private String Clases(String prefijo) {
-        if (tok.tipo == Token.CLASS) {
+        StringBuilder sb = new StringBuilder();
+        while (tok.tipo == Token.CLASS) {
             emparejar(Token.CLASS);
             Token idTok = tok;
             emparejar(Token.ID);
             
             String nuevoPrefijo = (prefijo.equals("") ? idTok.lexema : prefijo + "_" + idTok.lexema);
             
-            // Añadir clase a la TS actual
             if (!tsActual.set(new Simbolo(idTok.lexema, Simbolo.CLASS, nuevoPrefijo))) {
                 errorSemantico(ERRYADECL, idTok);
             }
             
-            // Nuevo ámbito para la clase
             tsActual = new TablaSimbolos(tsActual);
-            
             emparejar(Token.LBRACE);
             String miembros = Miembros(nuevoPrefijo, false, "");
             emparejar(Token.RBRACE);
-            
-            // Restaurar ámbito
             tsActual = tsActual.getParent();
             
-            String resto = Clases(prefijo);
-            return "// class " + nuevoPrefijo + "\n" + miembros + "\n" + resto;
+            sb.append("// class ").append(nuevoPrefijo).append("\n").append(miembros).append("\n");
         }
-        return "";
+        return sb.toString();
     }
 
-    // Miembros -> DefVar ; Miembros 
-    //           | DefFun Miembros 
-    //           | Clases Miembros 
-    //           | Sentencia Miembros
-    //           | { Bloque } Miembros
-    //           | empty
     private String Miembros(String prefijo, boolean enFuncion, String prefijoBloque) {
-        if (tok.tipo == Token.INT || tok.tipo == Token.FLOAT) {
-            String defVar = DefVar(prefijo, enFuncion, prefijoBloque);
-            emparejar(Token.SEMICOLON);
-            return defVar + ";\n" + Miembros(prefijo, enFuncion, prefijoBloque);
-        } else if (tok.tipo == Token.FUN) {
-            String defFun = DefFun(prefijo);
-            return defFun + Miembros(prefijo, enFuncion, prefijoBloque);
-        } else if (tok.tipo == Token.CLASS) {
-            return Clases(prefijo) + Miembros(prefijo, enFuncion, prefijoBloque);
-        } else if (esInicioSentencia()) {
-            return Sentencia(prefijo, enFuncion, prefijoBloque) + Miembros(prefijo, enFuncion, prefijoBloque);
-        } else if (tok.tipo == Token.LBRACE) {
-            emparejar(Token.LBRACE);
-            tsActual = new TablaSimbolos(tsActual);
-            String bloque = "{\n" + Miembros(prefijo, enFuncion, prefijoBloque + "_") + "}\n";
-            emparejar(Token.RBRACE);
-            tsActual = tsActual.getParent();
-            return bloque + Miembros(prefijo, enFuncion, prefijoBloque);
+        StringBuilder sb = new StringBuilder();
+        while (tok.tipo != Token.RBRACE && tok.tipo != Token.EOF && tok.tipo != Token.ELSE && tok.tipo != Token.FI) {
+            if (tok.tipo == Token.INT || tok.tipo == Token.FLOAT) {
+                sb.append(DefVar(prefijo, enFuncion, prefijoBloque)).append(";\n");
+                if (tok.tipo == Token.SEMICOLON) emparejar(Token.SEMICOLON);
+            } else if (tok.tipo == Token.FUN) {
+                sb.append(DefFun(prefijo));
+            } else if (tok.tipo == Token.CLASS) {
+                sb.append(Clases(prefijo));
+            } else if (esInicioSentencia() || tok.tipo == Token.LBRACE) {
+                sb.append(Sentencia(prefijo, enFuncion, prefijoBloque));
+                if (tok.tipo == Token.SEMICOLON) emparejar(Token.SEMICOLON);
+            } else if (tok.tipo == Token.SEMICOLON) {
+                emparejar(Token.SEMICOLON);
+            } else {
+                // Error sintáctico, forzamos error con emparejar
+                emparejar(Token.RBRACE);
+            }
         }
-        return "";
+        return sb.toString();
     }
 
     private boolean esInicioSentencia() {
         return tok.tipo == Token.ID || tok.tipo == Token.PRINT || tok.tipo == Token.IF;
     }
 
-    // DefVar -> (int | float) ID
     private String DefVar(String prefijo, boolean enFuncion, String prefijoBloque) {
         int tipo = (tok.tipo == Token.INT ? Simbolo.ENTERO : Simbolo.REAL);
         String tipoStr = (tipo == Simbolo.ENTERO ? "int" : "float");
@@ -123,7 +108,7 @@ public class TraductorDR {
         if (enFuncion) {
             nomTrad = prefijo + prefijoBloque + "_" + idTok.lexema;
         } else {
-            nomTrad = prefijo + "_" + idTok.lexema; // This might be wrong for class members but the PDF focuses on vars in functions
+            nomTrad = prefijo + "_" + idTok.lexema;
         }
         
         if (!tsActual.set(new Simbolo(idTok.lexema, tipo, nomTrad))) {
@@ -133,7 +118,6 @@ public class TraductorDR {
         return tipoStr + " " + nomTrad;
     }
 
-    // DefFun -> fun ID Parametros { Miembros }
     private String DefFun(String prefijo) {
         emparejar(Token.FUN);
         Token idTok = tok;
@@ -145,18 +129,15 @@ public class TraductorDR {
         }
         
         tsActual = new TablaSimbolos(tsActual);
-        
         String params = Parametros(nuevoPrefijo);
         emparejar(Token.LBRACE);
         String miembros = Miembros(nuevoPrefijo, true, "");
         emparejar(Token.RBRACE);
-        
         tsActual = tsActual.getParent();
         
         return "void " + nuevoPrefijo + "(" + params + ") {\n" + miembros + "} // " + nuevoPrefijo + "\n";
     }
 
-    // Parametros -> DefVar ; Parametros | DefVar | empty
     private String Parametros(String prefijo) {
         if (tok.tipo == Token.INT || tok.tipo == Token.FLOAT) {
             int tipo = (tok.tipo == Token.INT ? Simbolo.ENTERO : Simbolo.REAL);
@@ -175,8 +156,6 @@ public class TraductorDR {
                 emparejar(Token.SEMICOLON);
                 return miTrad + "," + Parametros(prefijo);
             } else if (tok.tipo == Token.INT || tok.tipo == Token.FLOAT) {
-                // Posible error en gramática, pero p01.txt tiene `int a;float b`
-                // Actually the semicolon separates them.
                 return miTrad + "," + Parametros(prefijo);
             }
             return miTrad;
@@ -184,9 +163,6 @@ public class TraductorDR {
         return "";
     }
 
-    // Sentencia -> ID = Exp
-    //            | print Exp
-    //            | if Exp : Sentencia [else Sentencia] fi
     private String Sentencia(String prefijo, boolean enFuncion, String prefijoBloque) {
         if (tok.tipo == Token.ID) {
             Token idTok = tok;
@@ -195,6 +171,7 @@ public class TraductorDR {
             if (s == null) errorSemantico(ERRNODECL, idTok);
             if (s.tipo != Simbolo.ENTERO && s.tipo != Simbolo.REAL) errorSemantico(ERRNOSIMPLE, idTok);
             
+            Token assignTok = tok;
             emparejar(Token.ASSIGN);
             ResExp exp = Exp();
             
@@ -204,8 +181,7 @@ public class TraductorDR {
             } else if (s.tipo == exp.tipo) {
                 trad = s.nomtrad + " = " + exp.trad + ";\n";
             } else {
-                // s.tipo == ENTERO && exp.tipo == REAL
-                errorSemantico(ERRTIPOS, idTok);
+                errorSemantico(ERRTIPOS, assignTok);
                 trad = "";
             }
             return trad;
@@ -218,14 +194,12 @@ public class TraductorDR {
                 return "printf(\"%f\"," + exp.trad + ");\n";
             }
         } else if (tok.tipo == Token.IF) {
+            Token ifTok = tok;
             emparejar(Token.IF);
             ResExp exp = Exp();
             if (exp.tipo != Simbolo.ENTERO) {
-                // El error debe ser en el token 'if' según el PDF
-                // Pero no tengo el token 'if' aquí, lo guardaré
+                errorSemantico(ERRNOENTERO, ifTok);
             }
-            // Realmente el PDF dice: Error semantico (...,...): en 'if', la expresion debe ser de tipo entero
-            // So we should have saved the 'if' token.
             
             emparejar(Token.COLON);
             String s1 = Sentencia(prefijo, enFuncion, prefijoBloque);
@@ -237,18 +211,18 @@ public class TraductorDR {
             emparejar(Token.FI);
             return "if (" + exp.trad + ")\n" + s1 + "\n" + s2;
         } else if (tok.tipo == Token.LBRACE) {
-            // This is handled in Miembros but might appear as a single sentence
             emparejar(Token.LBRACE);
             tsActual = new TablaSimbolos(tsActual);
             String bloque = "{\n" + Miembros(prefijo, enFuncion, prefijoBloque + "_") + "}\n";
             emparejar(Token.RBRACE);
             tsActual = tsActual.getParent();
             return bloque;
+        } else if (tok.tipo == Token.INT || tok.tipo == Token.FLOAT) {
+            return DefVar(prefijo, enFuncion, prefijoBloque) + ";\n";
         }
         return "";
     }
 
-    // Expresiones
     private ResExp Exp() {
         return ExpRel();
     }
@@ -344,13 +318,14 @@ public class TraductorDR {
             String lex = tok.lexema;
             emparejar(Token.REAL);
             return new ResExp(Simbolo.REAL, lex);
-        } else if (tok.tipo == Token.LPARENT) { // '('
+        } else if (tok.tipo == Token.LPARENT) {
             emparejar(Token.LPARENT);
             ResExp e = Exp();
-            emparejar(Token.RPARENT); // ')'
+            emparejar(Token.RPARENT);
             return new ResExp(e.tipo, "(" + e.trad + ")");
         }
-        // Error sintáctico
+        // Forzamos error sintáctico
+        emparejar(Token.NUM);
         return null;
     }
 

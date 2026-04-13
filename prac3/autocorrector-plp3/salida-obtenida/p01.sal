@@ -1,0 +1,36 @@
+// class Main
+void Main_main(int arg_Main_main_a,float arg_Main_main_b) {
+void Main_main_submain(float arg_Main_main_submain_c) {
+printf("%f",itor(1 +i 2) -r (itor(3) *r 4.5 /r itor(6)));
+float Main_main_submain_d;
+Main_main_submain_d = itor(arg_Main_main_a) +r arg_Main_main_b /r arg_Main_main_submain_c;
+if (itor(arg_Main_main_a) <r Main_main_submain_d)
+float Main_main_submain_e;
+
+else
+{
+int Main_main_submain__b;
+int Main_main_submain__d;
+Main_main_submain__b = arg_Main_main_a +i 77;
+Main_main_submain__d = Main_main_submain__b +i 33;
+printf("%f",itor(Main_main_submain__d) +r arg_Main_main_submain_c);
+}
+} // Main_main_submain
+// class Main_main_A
+
+// class Main_main_B
+void Main_main_B_mainB(float arg_Main_main_B_mainB_g) {
+{
+int Main_main_B_mainB__h;
+Main_main_B_mainB__h = 7;
+{
+float Main_main_B_mainB___i;
+Main_main_B_mainB___i = itor(2.5 !=r 2.4999);
+}
+}
+} // Main_main_B_mainB
+
+printf("%d",7);
+} // Main_main
+
+
