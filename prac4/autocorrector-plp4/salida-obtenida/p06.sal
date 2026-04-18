@@ -1,0 +1,102 @@
+// class Main
+void Main_main(int arg_Main_main_a,float arg_Main_main_b) {
+void Main_main_submain(float arg_Main_main_submain_c) {
+  printf("%f",itor(1 +i 2) -r (itor(3) *r 4.5 /r itor(6)));
+
+float Main_main_submain_d;
+
+  Main_main_submain_d = itor(arg_Main_main_a) +r arg_Main_main_b /r arg_Main_main_submain_c;
+if (itor(arg_Main_main_a) <r Main_main_submain_d)
+
+float Main_main_submain_e;
+
+else
+{
+
+int Main_main_submain__b;
+
+
+int Main_main_submain__d;
+
+  Main_main_submain__b = arg_Main_main_a +i 77;
+  Main_main_submain__d = Main_main_submain__b +i 33;
+  printf("%f",itor(Main_main_submain__d) +r arg_Main_main_submain_c);
+}
+
+} // Main_main_submain
+
+// class Main_main_A
+// class Main_main_A_AA
+// class Main_main_A_AA_AAA
+void Main_main_A_AA_AAA_submain(int arg_Main_main_A_AA_AAA_submain_c) {
+void Main_main_A_AA_AAA_submain_main(float arg_Main_main_A_AA_AAA_submain_main_a,int arg_Main_main_A_AA_AAA_submain_main_b) {
+  printf("%f",itor(arg_Main_main_A_AA_AAA_submain_c +i arg_Main_main_A_AA_AAA_submain_main_b) +r arg_Main_main_A_AA_AAA_submain_main_a);
+{
+
+int Main_main_A_AA_AAA_submain_main__a;
+
+
+int Main_main_A_AA_AAA_submain_main__b;
+
+
+int Main_main_A_AA_AAA_submain_main__c;
+
+if (Main_main_A_AA_AAA_submain_main__a >i Main_main_A_AA_AAA_submain_main__b)
+if (Main_main_A_AA_AAA_submain_main__a >i Main_main_A_AA_AAA_submain_main__c)
+  printf("%d",Main_main_A_AA_AAA_submain_main__a);
+else
+  printf("%d",Main_main_A_AA_AAA_submain_main__c);
+else
+if (Main_main_A_AA_AAA_submain_main__b >i Main_main_A_AA_AAA_submain_main__c)
+  printf("%d",Main_main_A_AA_AAA_submain_main__b);
+else
+  printf("%d",Main_main_A_AA_AAA_submain_main__c);
+}
+
+} // Main_main_A_AA_AAA_submain_main
+
+  printf("%d",2);
+} // Main_main_A_AA_AAA_submain
+
+
+
+
+// class Main_main_B
+void Main_main_B_mainB(float arg_Main_main_B_mainB_g) {
+{
+
+int Main_main_B_mainB__h;
+
+  Main_main_B_mainB__h = 7;
+{
+
+float Main_main_B_mainB___i;
+
+{
+{
+{
+
+int Main_main_B_mainB______j;
+
+  Main_main_B_mainB___i = itor(2.5 !=r 2.4999);
+}
+
+}
+
+}
+
+}
+
+}
+
+} // Main_main_B_mainB
+
+
+  printf("%d",7);
+} // Main_main
+
+void Main_Main(int arg_Main_Main_main,float arg_Main_Main_Main) {
+  arg_Main_Main_Main = 2.5 *r itor(arg_Main_Main_main);
+} // Main_Main
+
+

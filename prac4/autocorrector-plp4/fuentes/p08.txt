@@ -1,0 +1,1 @@
+class Calc { fun test int x; float y { float z; z = x * y + (x / 2.0) - (y * 3); print z } }

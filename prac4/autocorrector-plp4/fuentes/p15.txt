@@ -1,0 +1,1 @@
+class A {} class B {} class C { fun f { print 0 } }

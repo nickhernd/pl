@@ -1,0 +1,1 @@
+class Rel { fun f int a; float b { if a == b : print 1 fi; if a != b : print 2 fi; if a < b : print 3 fi; if a > b : print 4 fi; if a <= b : print 5 fi; if a >= b : print 6 fi } }

@@ -1,0 +1,1 @@
+class Main { fun main { int a; a = 1; { float a; a = 2.5; { int a; a = 3 } } print a } }

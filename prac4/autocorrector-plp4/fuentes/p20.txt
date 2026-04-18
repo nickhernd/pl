@@ -1,0 +1,1 @@
+class A { class B { fun f { { { int x; x = 1.5 } } } } }

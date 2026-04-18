@@ -1,0 +1,1 @@
+class If { fun f int a { if a + 0.5 > 1.0 : print a fi } }

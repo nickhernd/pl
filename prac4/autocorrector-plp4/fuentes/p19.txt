@@ -1,0 +1,1 @@
+class Sibling { fun f1 { int x } fun f2 { x = 1 } }

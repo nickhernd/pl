@@ -1,0 +1,26 @@
+class A  {
+
+  fun funcion int a;float b {
+     print a+b
+  }
+
+  class B  {
+
+    fun otra  float c {
+
+      float d;
+      print d*c;
+
+      if 2<d :
+        float e
+      else {
+        int b;
+        int d;
+        b = 2+77;
+        d = b+33-5*2*3.0;  /* Error ...: tipos incompatibles entero/real */
+        print d+c
+      }
+      fi
+    }
+  }
+}
