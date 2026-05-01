@@ -18,10 +18,10 @@ TablaTipos.o: TablaTipos.cc TablaTipos.h TablaSimbolos.h
 	$(CC) $(OPTS) -c TablaTipos.cc
 
 lex.yy.c : plp5.l comun.h
-	flex plp5.l
+	win_flex plp5.l
 	
 plp5.tab.c plp5.tab.h: plp5.y lex.yy.c comun.h TablaSimbolos.h TablaTipos.h
-	bison -d plp5.y	
+	win_bison -d plp5.y	
 
 
 clean:
