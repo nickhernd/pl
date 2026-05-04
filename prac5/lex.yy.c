@@ -574,7 +574,7 @@ void count(void) {
  */
 #include <unistd.h>
 #endif
-    
+
 #ifndef YY_EXTRA_TYPE
 #define YY_EXTRA_TYPE void *
 #endif
@@ -953,12 +953,12 @@ YY_RULE_SETUP
 case 23:
 YY_RULE_SETUP
 #line 56 "plp5.l"
-{ RET(ctebool); }
+{ yylval.lexema = strdup(yytext); RET(ctebool); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
 #line 57 "plp5.l"
-{ RET(ctebool); }
+{ yylval.lexema = strdup(yytext); RET(ctebool); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP

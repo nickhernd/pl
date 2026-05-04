@@ -2,10 +2,10 @@
 
 MAXTIME=15 	    # Tiempo máximo de ejecución (en segundos) de una prueba
 PRINCIPAL=plp5      # Nombre del ejecutable de la práctica
-FNT=fuentes	    # Directorio con los ficheros fuente de entrada
-ENT=datos-entrada   # Directorio con los datos de entrada a las pruebas
-SAL=salida-esperada # Directorio con los ficheros de salida correctos
-OBT=salida-obtenida # Directorio con los ficheros obtenidos tras la ejecución de la práctica
+FNT=autocorrector-plp5/fuentes	    # Directorio con los ficheros fuente de entrada
+ENT=autocorrector-plp5/datos-entrada   # Directorio con los datos de entrada a las pruebas
+SAL=autocorrector-plp5/salida-esperada # Directorio con los ficheros de salida correctos
+OBT=autocorrector-plp5/salida-obtenida # Directorio con los ficheros obtenidos tras la ejecución de la práctica
 
 mata=/tmp/mata
 comparefiles=/tmp/comparefiles

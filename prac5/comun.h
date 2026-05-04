@@ -46,8 +46,11 @@ struct Atributos {
     int ndims;
     vector<unsigned> dims;
     string ref; 
+    string lexema;
+    int nlin;
+    int ncol;
 
-    Atributos() : codigo(""), tipo(-1), dir(0), tam(0), tbase(0), ndims(0), ref("") {}
+    Atributos() : codigo(""), tipo(-1), dir(0), tam(0), tbase(0), ndims(0), ref(""), lexema(""), nlin(0), ncol(0) {}
 };
 
 void msgError(int nerror, int nlin, int ncol, const char *s);

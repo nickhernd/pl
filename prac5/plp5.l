@@ -24,6 +24,14 @@ void count(void) {
 }
 
 #define RET(token) { count(); return token; }
+#define RET_ATTR(token) { \
+    count(); \
+    yylval.attr = new Atributos(); \
+    yylval.attr->lexema = yytext; \
+    yylval.attr->nlin = nlin; \
+    yylval.attr->ncol = ncol - strlen(yytext); \
+    return token; \
+}
 
 %}
 
@@ -53,39 +61,30 @@ void count(void) {
 "if"                { RET(if_token); }
 "else"              { RET(else_token); }
 "while"             { RET(while_token); }
-"true"              { RET(ctebool); }
-"false"             { RET(ctebool); }
+"true"              { RET_ATTR(ctebool); }
+"false"             { RET_ATTR(ctebool); }
 
-[a-zA-Z][a-zA-Z0-9]* { 
-    yylval.lexema = strdup(yytext);
-    RET(id); 
-}
+[a-zA-Z][a-zA-Z0-9]* { RET_ATTR(id); }
 
-[0-9]+ { 
-    yylval.lexema = strdup(yytext);
-    RET(nentero); 
-}
+[0-9]+ { RET_ATTR(nentero); }
 
-[0-9]+"."[0-9]+ { 
-    yylval.lexema = strdup(yytext);
-    RET(nreal); 
-}
+[0-9]+"."[0-9]+ { RET_ATTR(nreal); }
 
 ","                 { RET(coma); }
 ";"                 { RET(pyc); }
 "."                 { RET(punto); }
 "("                 { RET(pari); }
 ")"                 { RET(pard); }
-"=="                { yylval.lexema = strdup(yytext); RET(relop); }
-"!="                { yylval.lexema = strdup(yytext); RET(relop); }
-"<"                 { yylval.lexema = strdup(yytext); RET(relop); }
-"<="                { yylval.lexema = strdup(yytext); RET(relop); }
-">"                 { yylval.lexema = strdup(yytext); RET(relop); }
-">="                { yylval.lexema = strdup(yytext); RET(relop); }
-"+"                 { yylval.lexema = strdup(yytext); RET(addop); }
-"-"                 { yylval.lexema = strdup(yytext); RET(addop); }
-"*"                 { yylval.lexema = strdup(yytext); RET(mulop); }
-"/"                 { yylval.lexema = strdup(yytext); RET(mulop); }
+"=="                { RET_ATTR(relop); }
+"!="                { RET_ATTR(relop); }
+"<"                 { RET_ATTR(relop); }
+"<="                { RET_ATTR(relop); }
+">"                 { RET_ATTR(relop); }
+">="                { RET_ATTR(relop); }
+"+"                 { RET_ATTR(addop); }
+"-"                 { RET_ATTR(addop); }
+"*"                 { RET_ATTR(mulop); }
+"/"                 { RET_ATTR(mulop); }
 "="                 { RET(asig); }
 "["                 { RET(cori); }
 "]"                 { RET(cord); }

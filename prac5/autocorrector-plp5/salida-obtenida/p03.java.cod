@@ -1,0 +1,113 @@
+mov #0 A
+mov A 0
+mov #0 A
+mov A 1
+L3:
+mov #4 A
+mov A 16000
+mov 0 A
+lssi 16000
+jz L4
+mov #0 A
+mov A 1
+L1:
+mov #4 A
+mov A 16000
+mov 1 A
+lssi 16000
+jz L2
+mov 0 A
+muli #4
+addi #5
+mov A 16000
+mov 1 A
+addi 16000
+mov A 16000
+rdr A
+mov 16000 B
+mov A @B+0
+mov #1 A
+mov A 16000
+mov 1 A
+addi 16000
+mov A 1
+jmp L1
+L2:
+mov #1 A
+mov A 16000
+mov 0 A
+addi 16000
+mov A 0
+jmp L3
+L4:
+mov 1 A
+mov A 16000
+mov 0 A
+eqli 16000
+jz L9
+rdi A
+mov A 23
+mov #0 A
+mov A 0
+mov #0 A
+itor
+mov A 22
+L7:
+mov #4 A
+mov A 16000
+mov 0 A
+lssi 16000
+jz L8
+mov #0 A
+mov A 1
+mov #0 A
+itor
+mov A 21
+L5:
+mov #4 A
+mov A 16000
+mov 1 A
+lssi 16000
+jz L6
+mov 0 A
+muli #4
+addi #5
+mov A 16000
+mov 1 A
+addi 16000
+mov @A A
+mov A 16000
+mov 21 A
+addr 16000
+mov A 21
+mov #1 A
+mov A 16000
+mov 1 A
+addi 16000
+mov A 1
+jmp L5
+L6:
+mov 21 A
+wrr A
+wrl
+mov #1 A
+mov A 16000
+mov 0 A
+addi 16000
+mov A 0
+mov 21 A
+mov A 16000
+mov 22 A
+addr 16000
+mov A 22
+jmp L7
+L8:
+mov 23 A
+itor
+mov A 16000
+mov 22 A
+divr 16000
+wrr A
+wrl
+L9:
+halt

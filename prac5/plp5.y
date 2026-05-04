@@ -15,6 +15,7 @@ extern int yylex();
 extern int nlin, ncol;
 extern char *yytext;
 extern int findefichero;
+extern FILE *yyin;
 
 void msgError(int nerror, int nlin, int ncol, const char *s) {
      switch (nerror) {
@@ -107,7 +108,7 @@ void releaseTemp(int n = 1) {
     Atributos *attr;
 }
 
-%token <lexema> id nentero nreal relop addop mulop ctebool
+%token <attr> id nentero nreal relop addop mulop ctebool
 %token boolean int_type double_type main_token system_token out_token in_token print_token println_token string_token class_token import_token new_token public_token static_token void_token scanner_token nextint nextdouble if_token else_token while_token coma pyc punto pari pard asig cori cord llavei llaved and_token or_token not_token
 
 %type <attr> S Import SecImp Class Main Tipo Bloque BDecl DVar DimSN Dimensiones LIdent Variable SeqInstr Instr Expr EConj ERel Esimple Term Factor Ref
@@ -125,9 +126,9 @@ Import : Import import_token SecImp pyc {
     $$ = new Atributos();
 }
 
-SecImp : SecImp punto id
-| SecImp punto scanner_token
-| id
+SecImp : SecImp punto id { $$ = $1; }
+| SecImp punto scanner_token { $$ = $1; }
+| id { $$ = new Atributos(); }
 
 Class : public_token class_token id llavei Main llaved {
     $$ = $5;
@@ -540,7 +541,14 @@ Ref : id {
 
 %%
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc > 1) {
+        yyin = fopen(argv[1], "r");
+        if (!yyin) {
+            fprintf(stderr, "No se pudo abrir el fichero %s\n", argv[1]);
+            exit(1);
+        }
+    }
     yyparse();
     return 0;
 }

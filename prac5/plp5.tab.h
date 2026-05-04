@@ -104,7 +104,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 105 "plp5.y"
+#line 106 "plp5.y"
 
     char *lexema;
     Atributos *attr;

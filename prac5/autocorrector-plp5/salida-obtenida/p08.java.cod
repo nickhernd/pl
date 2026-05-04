@@ -1,0 +1,238 @@
+mov #50 A
+mov A 36
+mov #0 A
+mov A 37
+L5:
+mov #3 A
+mov A 16000
+mov 37 A
+lssi 16000
+jz L6
+mov #0 A
+mov A 38
+L3:
+mov #3 A
+mov A 16000
+mov 38 A
+lssi 16000
+jz L4
+mov #0 A
+mov A 39
+L1:
+mov #2 A
+mov A 16000
+mov 39 A
+lssi 16000
+jz L2
+mov 37 A
+muli #6
+addi #0
+mov A 16000
+mov 38 A
+muli #2
+addi 16000
+mov A 16000
+mov 39 A
+addi 16000
+mov A 16000
+mov 36 A
+mov 16000 B
+mov A @B+0
+mov #1 A
+mov A 16000
+mov 36 A
+subi 16000
+mov A 36
+mov #1 A
+mov A 16000
+mov 39 A
+addi 16000
+mov A 39
+jmp L1
+L2:
+mov #1 A
+mov A 16000
+mov 38 A
+addi 16000
+mov A 38
+jmp L3
+L4:
+mov #1 A
+mov A 16000
+mov 37 A
+addi 16000
+mov A 37
+jmp L5
+L6:
+mov #0 A
+mov A 37
+L11:
+mov #3 A
+mov A 16000
+mov 37 A
+lssi 16000
+jz L12
+mov #0 A
+mov A 38
+L9:
+mov #3 A
+mov A 16000
+mov 38 A
+lssi 16000
+jz L10
+mov #0 A
+mov A 39
+L7:
+mov #2 A
+mov A 16000
+mov 39 A
+lssi 16000
+jz L8
+mov 39 A
+mov A 16000
+mov #2 A
+mov A 16000
+mov 38 A
+muli 16000
+mov A 16000
+mov #2 A
+mov A 16000
+mov #3 A
+mov A 16000
+mov 37 A
+muli 16000
+muli 16000
+addi 16000
+addi 16000
+addi #18
+mov A 16000
+mov 37 A
+muli #6
+addi #0
+mov A 16000
+mov 38 A
+muli #2
+addi 16000
+mov A 16000
+mov 39 A
+addi 16000
+mov @A A
+mov 16000 B
+mov A @B+0
+mov #1 A
+mov A 16000
+mov 39 A
+addi 16000
+mov A 39
+jmp L7
+L8:
+mov #1 A
+mov A 16000
+mov 38 A
+addi 16000
+mov A 38
+jmp L9
+L10:
+mov #1 A
+mov A 16000
+mov 37 A
+addi 16000
+mov A 37
+jmp L11
+L12:
+mov #1 A
+mov A 37
+L15:
+mov #17 A
+mov A 16000
+mov 37 A
+leqi 16000
+jz L16
+mov 37 A
+addi #18
+mov @A A
+mov A 40
+mov #1 A
+mov A 16000
+mov 37 A
+subi 16000
+mov A 38
+L13:
+mov 38 A
+addi #18
+mov @A A
+mov A 16000
+mov 40 A
+lssi 16000
+mov A 16000
+mov #1 A
+mov A 16000
+mov #0 A
+subi 16000
+mov A 16000
+mov 38 A
+neqi 16000
+andi 16000
+jz L14
+mov #1 A
+mov A 16000
+mov 38 A
+addi 16000
+addi #18
+mov A 16000
+mov 38 A
+addi #18
+mov @A A
+mov 16000 B
+mov A @B+0
+mov #1 A
+mov A 16000
+mov 38 A
+subi 16000
+mov A 38
+jmp L13
+L14:
+mov #1 A
+mov A 16000
+mov 38 A
+addi 16000
+addi #18
+mov A 16000
+mov 40 A
+mov 16000 B
+mov A @B+0
+mov #1 A
+mov A 16000
+mov 37 A
+addi 16000
+mov A 37
+jmp L15
+L16:
+mov #0 A
+mov A 37
+mov #0 A
+mov A 36
+L17:
+mov #2 A
+mov A 16000
+mov 37 A
+leqi 16000
+jz L18
+mov 37 A
+addi #18
+mov @A A
+mov A 16000
+mov 36 A
+addi 16000
+mov A 36
+mov #1 A
+mov A 16000
+mov 37 A
+addi 16000
+mov A 37
+jmp L17
+L18:
+mov 36 A
+wri A
+wrl
+halt
