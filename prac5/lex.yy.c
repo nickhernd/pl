@@ -561,9 +561,17 @@ void count(void) {
 }
 
 #define RET(token) { count(); return token; }
+#define RET_ATTR(token) { \
+    count(); \
+    yylval.attr = new Atributos(); \
+    yylval.attr->lexema = yytext; \
+    yylval.attr->nlin = nlin; \
+    yylval.attr->ncol = ncol - strlen(yytext); \
+    return token; \
+}
 
-#line 565 "lex.yy.c"
-#line 566 "lex.yy.c"
+#line 573 "lex.yy.c"
+#line 574 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -780,10 +788,10 @@ YY_DECL
 		}
 
 	{
-#line 32 "plp5.l"
+#line 40 "plp5.l"
 
 
-#line 786 "lex.yy.c"
+#line 794 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -842,289 +850,280 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 34 "plp5.l"
+#line 42 "plp5.l"
 { RET(boolean); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 35 "plp5.l"
+#line 43 "plp5.l"
 { RET(int_type); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 36 "plp5.l"
+#line 44 "plp5.l"
 { RET(double_type); }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 37 "plp5.l"
+#line 45 "plp5.l"
 { RET(main_token); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 38 "plp5.l"
+#line 46 "plp5.l"
 { RET(system_token); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 39 "plp5.l"
+#line 47 "plp5.l"
 { RET(out_token); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 40 "plp5.l"
+#line 48 "plp5.l"
 { RET(in_token); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 41 "plp5.l"
+#line 49 "plp5.l"
 { RET(print_token); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 42 "plp5.l"
+#line 50 "plp5.l"
 { RET(println_token); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 43 "plp5.l"
+#line 51 "plp5.l"
 { RET(string_token); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 44 "plp5.l"
+#line 52 "plp5.l"
 { RET(class_token); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 45 "plp5.l"
+#line 53 "plp5.l"
 { RET(import_token); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 46 "plp5.l"
+#line 54 "plp5.l"
 { RET(new_token); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 47 "plp5.l"
+#line 55 "plp5.l"
 { RET(public_token); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 48 "plp5.l"
+#line 56 "plp5.l"
 { RET(static_token); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 49 "plp5.l"
+#line 57 "plp5.l"
 { RET(void_token); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 50 "plp5.l"
+#line 58 "plp5.l"
 { RET(scanner_token); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 51 "plp5.l"
+#line 59 "plp5.l"
 { RET(nextint); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 52 "plp5.l"
+#line 60 "plp5.l"
 { RET(nextdouble); }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 53 "plp5.l"
+#line 61 "plp5.l"
 { RET(if_token); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 54 "plp5.l"
+#line 62 "plp5.l"
 { RET(else_token); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 55 "plp5.l"
+#line 63 "plp5.l"
 { RET(while_token); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 56 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(ctebool); }
+#line 64 "plp5.l"
+{ RET_ATTR(ctebool); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 57 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(ctebool); }
+#line 65 "plp5.l"
+{ RET_ATTR(ctebool); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 59 "plp5.l"
-{ 
-    yylval.lexema = strdup(yytext);
-    RET(id); 
-}
+#line 67 "plp5.l"
+{ RET_ATTR(id); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 64 "plp5.l"
-{ 
-    yylval.lexema = strdup(yytext);
-    RET(nentero); 
-}
+#line 69 "plp5.l"
+{ RET_ATTR(nentero); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 69 "plp5.l"
-{ 
-    yylval.lexema = strdup(yytext);
-    RET(nreal); 
-}
+#line 71 "plp5.l"
+{ RET_ATTR(nreal); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 74 "plp5.l"
+#line 73 "plp5.l"
 { RET(coma); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 75 "plp5.l"
+#line 74 "plp5.l"
 { RET(pyc); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 76 "plp5.l"
+#line 75 "plp5.l"
 { RET(punto); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 77 "plp5.l"
+#line 76 "plp5.l"
 { RET(pari); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 78 "plp5.l"
+#line 77 "plp5.l"
 { RET(pard); }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 79 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(relop); }
+#line 78 "plp5.l"
+{ RET_ATTR(relop); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 80 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(relop); }
+#line 79 "plp5.l"
+{ RET_ATTR(relop); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 81 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(relop); }
+#line 80 "plp5.l"
+{ RET_ATTR(relop); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 82 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(relop); }
+#line 81 "plp5.l"
+{ RET_ATTR(relop); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 83 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(relop); }
+#line 82 "plp5.l"
+{ RET_ATTR(relop); }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 84 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(relop); }
+#line 83 "plp5.l"
+{ RET_ATTR(relop); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 85 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(addop); }
+#line 84 "plp5.l"
+{ RET_ATTR(addop); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 86 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(addop); }
+#line 85 "plp5.l"
+{ RET_ATTR(addop); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 87 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(mulop); }
+#line 86 "plp5.l"
+{ RET_ATTR(mulop); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 88 "plp5.l"
-{ yylval.lexema = strdup(yytext); RET(mulop); }
+#line 87 "plp5.l"
+{ RET_ATTR(mulop); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 89 "plp5.l"
+#line 88 "plp5.l"
 { RET(asig); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 90 "plp5.l"
+#line 89 "plp5.l"
 { RET(cori); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 91 "plp5.l"
+#line 90 "plp5.l"
 { RET(cord); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 92 "plp5.l"
+#line 91 "plp5.l"
 { RET(llavei); }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 93 "plp5.l"
+#line 92 "plp5.l"
 { RET(llaved); }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 94 "plp5.l"
+#line 93 "plp5.l"
 { RET(and_token); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 95 "plp5.l"
+#line 94 "plp5.l"
 { RET(or_token); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 96 "plp5.l"
+#line 95 "plp5.l"
 { RET(not_token); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 98 "plp5.l"
+#line 97 "plp5.l"
 { count(); /* ignore comments */ }
 	YY_BREAK
 case 52:
 /* rule 52 can match eol */
 YY_RULE_SETUP
-#line 99 "plp5.l"
+#line 98 "plp5.l"
 { count(); /* ignore whitespace */ }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 101 "plp5.l"
+#line 100 "plp5.l"
 { msgError(ERRLEXICO, nlin, ncol, yytext); }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 103 "plp5.l"
+#line 102 "plp5.l"
 { findefichero = 1; yyterminate(); }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 105 "plp5.l"
+#line 104 "plp5.l"
 ECHO;
 	YY_BREAK
-#line 1127 "lex.yy.c"
+#line 1126 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2127,6 +2126,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 105 "plp5.l"
+#line 104 "plp5.l"
 
 

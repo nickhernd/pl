@@ -1452,10 +1452,10 @@ yyreduce:
 #line 167 "plp5.y"
                                                     {
     if ((yyvsp[-7].attr)->tipo != (yyvsp[-2].attr)->tipo) {
-        msgError(ERR_TIPOSDECLARRAY, nlin, ncol, (yyvsp[-5].lexema));
+        msgError(ERR_TIPOSDECLARRAY, nlin, ncol, (yyvsp[-5].attr));
     }
     if ((yyvsp[-6].attr)->ndims != (yyvsp[-1].attr)->ndims) {
-        msgError(ERR_DIMSDECLARRAY, nlin, ncol, (yyvsp[-5].lexema));
+        msgError(ERR_DIMSDECLARRAY, nlin, ncol, (yyvsp[-5].attr));
     }
     
     unsigned tbase = (yyvsp[-7].attr)->tipo;
@@ -1470,17 +1470,17 @@ yyreduce:
     }
     
     Simbolo s;
-    s.nombre = (yyvsp[-5].lexema);
+    s.nombre = (yyvsp[-5].attr);
     s.tipo = tipo_id;
     s.dir = next_dir;
     s.tam = total_tam;
     
     if (next_dir + total_tam > 16000) {
-        msgError(ERR_NOCABE, nlin, ncol, (yyvsp[-5].lexema));
+        msgError(ERR_NOCABE, nlin, ncol, (yyvsp[-5].attr));
     }
     
     if (!ts->set(s)) {
-        msgError(ERR_YADECL, nlin, ncol, (yyvsp[-5].lexema));
+        msgError(ERR_YADECL, nlin, ncol, (yyvsp[-5].attr));
     }
     next_dir += total_tam;
     (yyval.attr) = new Atributos();
@@ -1492,12 +1492,12 @@ yyreduce:
 #line 202 "plp5.y"
                                                                                           {
     Simbolo s;
-    s.nombre = (yyvsp[-9].lexema);
+    s.nombre = (yyvsp[-9].attr);
     s.tipo = SCVAR;
     s.dir = 0;
     s.tam = 0;
     if (!ts->set(s)) {
-        msgError(ERR_YADECL, nlin, ncol, (yyvsp[-9].lexema));
+        msgError(ERR_YADECL, nlin, ncol, (yyvsp[-9].attr));
     }
     (yyval.attr) = new Atributos();
 }
@@ -1525,9 +1525,9 @@ yyreduce:
   case 23: /* Dimensiones: cori nentero cord Dimensiones  */
 #line 223 "plp5.y"
                                             {
-    int val = atoi((yyvsp[-2].lexema));
+    int val = atoi((yyvsp[-2].attr));
     if (val <= 0) {
-        msgError(ERR_DIM, nlin, ncol, (yyvsp[-2].lexema));
+        msgError(ERR_DIM, nlin, ncol, (yyvsp[-2].attr));
     }
     (yyval.attr) = (yyvsp[0].attr);
     (yyval.attr)->ndims++;
@@ -1539,9 +1539,9 @@ yyreduce:
   case 24: /* Dimensiones: cori nentero cord  */
 #line 232 "plp5.y"
                     {
-    int val = atoi((yyvsp[-1].lexema));
+    int val = atoi((yyvsp[-1].attr));
     if (val <= 0) {
-        msgError(ERR_DIM, nlin, ncol, (yyvsp[-1].lexema));
+        msgError(ERR_DIM, nlin, ncol, (yyvsp[-1].attr));
     }
     (yyval.attr) = new Atributos();
     (yyval.attr)->ndims = 1;
@@ -1571,15 +1571,15 @@ yyreduce:
 #line 250 "plp5.y"
               {
     Simbolo s;
-    s.nombre = (yyvsp[0].lexema);
+    s.nombre = (yyvsp[0].attr);
     s.tipo = current_type;
     s.dir = next_dir;
     s.tam = 1;
     if (next_dir + 1 > 16000) {
-        msgError(ERR_NOCABE, nlin, ncol, (yyvsp[0].lexema));
+        msgError(ERR_NOCABE, nlin, ncol, (yyvsp[0].attr));
     }
     if (!ts->set(s)) {
-        msgError(ERR_YADECL, nlin, ncol, (yyvsp[0].lexema));
+        msgError(ERR_YADECL, nlin, ncol, (yyvsp[0].attr));
     }
     next_dir++;
     (yyval.attr) = new Atributos();
@@ -1764,22 +1764,22 @@ yyreduce:
     
     if (((yyvsp[-2].attr)->tipo == LOGICO && (yyvsp[0].attr)->tipo == LOGICO) || (((yyvsp[-2].attr)->tipo == ENTERO || (yyvsp[-2].attr)->tipo == REAL) && ((yyvsp[0].attr)->tipo == ENTERO || (yyvsp[0].attr)->tipo == REAL))) {
         if ((yyvsp[-2].attr)->tipo == REAL || (yyvsp[0].attr)->tipo == REAL) {
-            if (!strcmp((yyvsp[-1].lexema), "==")) (yyval.attr)->codigo += "eqlr " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), "!=")) (yyval.attr)->codigo += "neqr " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), "<")) (yyval.attr)->codigo += "lssr " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), "<=")) (yyval.attr)->codigo += "leqr " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), ">")) (yyval.attr)->codigo += "gtrr " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), ">=")) (yyval.attr)->codigo += "geqr " + to_string(tmp) + "\n";
+            if (!strcmp((yyvsp[-1].attr), "==")) (yyval.attr)->codigo += "eqlr " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), "!=")) (yyval.attr)->codigo += "neqr " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), "<")) (yyval.attr)->codigo += "lssr " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), "<=")) (yyval.attr)->codigo += "leqr " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), ">")) (yyval.attr)->codigo += "gtrr " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), ">=")) (yyval.attr)->codigo += "geqr " + to_string(tmp) + "\n";
         } else {
-            if (!strcmp((yyvsp[-1].lexema), "==")) (yyval.attr)->codigo += "eqli " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), "!=")) (yyval.attr)->codigo += "neqi " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), "<")) (yyval.attr)->codigo += "lssi " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), "<=")) (yyval.attr)->codigo += "leqi " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), ">")) (yyval.attr)->codigo += "gtri " + to_string(tmp) + "\n";
-            else if (!strcmp((yyvsp[-1].lexema), ">=")) (yyval.attr)->codigo += "geqi " + to_string(tmp) + "\n";
+            if (!strcmp((yyvsp[-1].attr), "==")) (yyval.attr)->codigo += "eqli " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), "!=")) (yyval.attr)->codigo += "neqi " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), "<")) (yyval.attr)->codigo += "lssi " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), "<=")) (yyval.attr)->codigo += "leqi " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), ">")) (yyval.attr)->codigo += "gtri " + to_string(tmp) + "\n";
+            else if (!strcmp((yyvsp[-1].attr), ">=")) (yyval.attr)->codigo += "geqi " + to_string(tmp) + "\n";
         }
     } else {
-        msgError(ERR_TIPOS, nlin, ncol, (yyvsp[-1].lexema));
+        msgError(ERR_TIPOS, nlin, ncol, (yyvsp[-1].attr));
     }
     (yyval.attr)->tipo = LOGICO;
     releaseTemp();
@@ -1805,15 +1805,15 @@ yyreduce:
     if ((yyvsp[-2].attr)->tipo == ENTERO && (yyvsp[0].attr)->tipo == REAL) (yyval.attr)->codigo += "itor\n";
 
     if ((yyvsp[-2].attr)->tipo == REAL || (yyvsp[0].attr)->tipo == REAL) {
-        if (!strcmp((yyvsp[-1].lexema), "+")) (yyval.attr)->codigo += "addr " + to_string(tmp) + "\n";
+        if (!strcmp((yyvsp[-1].attr), "+")) (yyval.attr)->codigo += "addr " + to_string(tmp) + "\n";
         else (yyval.attr)->codigo += "subr " + to_string(tmp) + "\n";
         (yyval.attr)->tipo = REAL;
     } else if ((yyvsp[-2].attr)->tipo == ENTERO && (yyvsp[0].attr)->tipo == ENTERO) {
-        if (!strcmp((yyvsp[-1].lexema), "+")) (yyval.attr)->codigo += "addi " + to_string(tmp) + "\n";
+        if (!strcmp((yyvsp[-1].attr), "+")) (yyval.attr)->codigo += "addi " + to_string(tmp) + "\n";
         else (yyval.attr)->codigo += "subi " + to_string(tmp) + "\n";
         (yyval.attr)->tipo = ENTERO;
     } else {
-        msgError(ERR_NUM, nlin, ncol, (yyvsp[-1].lexema));
+        msgError(ERR_NUM, nlin, ncol, (yyvsp[-1].attr));
     }
     releaseTemp();
 }
@@ -1838,15 +1838,15 @@ yyreduce:
     if ((yyvsp[-2].attr)->tipo == ENTERO && (yyvsp[0].attr)->tipo == REAL) (yyval.attr)->codigo += "itor\n";
 
     if ((yyvsp[-2].attr)->tipo == REAL || (yyvsp[0].attr)->tipo == REAL) {
-        if (!strcmp((yyvsp[-1].lexema), "*")) (yyval.attr)->codigo += "mulr " + to_string(tmp) + "\n";
+        if (!strcmp((yyvsp[-1].attr), "*")) (yyval.attr)->codigo += "mulr " + to_string(tmp) + "\n";
         else (yyval.attr)->codigo += "divr " + to_string(tmp) + "\n";
         (yyval.attr)->tipo = REAL;
     } else if ((yyvsp[-2].attr)->tipo == ENTERO && (yyvsp[0].attr)->tipo == ENTERO) {
-        if (!strcmp((yyvsp[-1].lexema), "*")) (yyval.attr)->codigo += "muli " + to_string(tmp) + "\n";
+        if (!strcmp((yyvsp[-1].attr), "*")) (yyval.attr)->codigo += "muli " + to_string(tmp) + "\n";
         else (yyval.attr)->codigo += "divi " + to_string(tmp) + "\n";
         (yyval.attr)->tipo = ENTERO;
     } else {
-        msgError(ERR_NUM, nlin, ncol, (yyvsp[-1].lexema));
+        msgError(ERR_NUM, nlin, ncol, (yyvsp[-1].attr));
     }
     releaseTemp();
 }
@@ -1876,9 +1876,9 @@ yyreduce:
   case 49: /* Factor: id punto nextint pari pard  */
 #line 454 "plp5.y"
                              {
-    Simbolo *s = ts->get((yyvsp[-4].lexema));
-    if (!s) msgError(ERR_NODECL, nlin, ncol, (yyvsp[-4].lexema));
-    if (s->tipo != SCVAR) msgError(ERR_NOSC, nlin, ncol, (yyvsp[-4].lexema));
+    Simbolo *s = ts->get((yyvsp[-4].attr));
+    if (!s) msgError(ERR_NODECL, nlin, ncol, (yyvsp[-4].attr));
+    if (s->tipo != SCVAR) msgError(ERR_NOSC, nlin, ncol, (yyvsp[-4].attr));
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = "rdi A\n";
     (yyval.attr)->tipo = ENTERO;
@@ -1889,9 +1889,9 @@ yyreduce:
   case 50: /* Factor: id punto nextdouble pari pard  */
 #line 462 "plp5.y"
                                 {
-    Simbolo *s = ts->get((yyvsp[-4].lexema));
-    if (!s) msgError(ERR_NODECL, nlin, ncol, (yyvsp[-4].lexema));
-    if (s->tipo != SCVAR) msgError(ERR_NOSC, nlin, ncol, (yyvsp[-4].lexema));
+    Simbolo *s = ts->get((yyvsp[-4].attr));
+    if (!s) msgError(ERR_NODECL, nlin, ncol, (yyvsp[-4].attr));
+    if (s->tipo != SCVAR) msgError(ERR_NOSC, nlin, ncol, (yyvsp[-4].attr));
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = "rdr A\n";
     (yyval.attr)->tipo = REAL;
@@ -1903,7 +1903,7 @@ yyreduce:
 #line 470 "plp5.y"
           {
     (yyval.attr) = new Atributos();
-    (yyval.attr)->codigo = "mov #" + string((yyvsp[0].lexema)) + " A\n";
+    (yyval.attr)->codigo = "mov #" + string((yyvsp[0].attr)) + " A\n";
     (yyval.attr)->tipo = ENTERO;
 }
 #line 1910 "plp5.tab.c"
@@ -1913,7 +1913,7 @@ yyreduce:
 #line 475 "plp5.y"
         {
     (yyval.attr) = new Atributos();
-    (yyval.attr)->codigo = "mov $" + string((yyvsp[0].lexema)) + " A\n";
+    (yyval.attr)->codigo = "mov $" + string((yyvsp[0].attr)) + " A\n";
     (yyval.attr)->tipo = REAL;
 }
 #line 1920 "plp5.tab.c"
@@ -1923,7 +1923,7 @@ yyreduce:
 #line 480 "plp5.y"
           {
     (yyval.attr) = new Atributos();
-    if (!strcmp((yyvsp[0].lexema), "true")) (yyval.attr)->codigo = "mov #1 A\n";
+    if (!strcmp((yyvsp[0].attr), "true")) (yyval.attr)->codigo = "mov #1 A\n";
     else (yyval.attr)->codigo = "mov #0 A\n";
     (yyval.attr)->tipo = LOGICO;
 }
@@ -1963,9 +1963,9 @@ yyreduce:
   case 57: /* Ref: id  */
 #line 502 "plp5.y"
          {
-    Simbolo *s = ts->get((yyvsp[0].lexema));
-    if (!s) msgError(ERR_NODECL, nlin, ncol, (yyvsp[0].lexema));
-    if (s->tipo == SCVAR) msgError(ERR_SCVAR, nlin, ncol, (yyvsp[0].lexema));
+    Simbolo *s = ts->get((yyvsp[0].attr));
+    if (!s) msgError(ERR_NODECL, nlin, ncol, (yyvsp[0].attr));
+    if (s->tipo == SCVAR) msgError(ERR_SCVAR, nlin, ncol, (yyvsp[0].attr));
     
     (yyval.attr) = new Atributos();
     (yyval.attr)->ref = to_string(s->dir);
