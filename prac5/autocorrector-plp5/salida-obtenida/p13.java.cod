@@ -12,7 +12,7 @@ mov 16000 B
 mov A @B+0
 mov #2 A
 mov A 0
-L1:
+L1
 mov #100 A
 mov A 16000
 mov 0 A
@@ -22,19 +22,19 @@ mov 0 A
 addi #1
 mov A 16000
 mov #2 A
-mov A 16000
+mov A 16001
 mov 0 A
-subi 16000
+subi 16001
 addi #1
 mov @A A
-mov A 16000
+mov A 16001
 mov #1 A
-mov A 16000
+mov A 16001
 mov 0 A
-subi 16000
+subi 16001
 addi #1
 mov @A A
-addi 16000
+addi 16001
 mov 16000 B
 mov A @B+0
 mov #1 A
@@ -43,7 +43,7 @@ mov 0 A
 addi 16000
 mov A 0
 jmp L1
-L2:
+L2
 mov #4 A
 addi #1
 mov @A A

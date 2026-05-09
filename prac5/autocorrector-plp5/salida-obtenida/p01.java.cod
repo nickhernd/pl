@@ -31,7 +31,7 @@ mov A 4
 mov 4 A
 wri A
 wrl
-L1:
+L1
 mov 0 A
 wrr A
 wrl

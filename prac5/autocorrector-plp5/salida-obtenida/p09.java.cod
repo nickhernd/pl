@@ -4,7 +4,7 @@ mov $0.0 A
 mov A 1
 mov 4 A
 mov A 2
-L5:
+L5
 mov #1 A
 mov A 16000
 mov 2 A
@@ -15,7 +15,7 @@ mov A 3
 mov #1 A
 itor
 mov A 0
-L3:
+L3
 mov #1 A
 mov A 16000
 mov 3 A
@@ -34,18 +34,18 @@ mov 0 A
 mulr 16000
 mov A 0
 jmp L2
-L1:
+L1
 mov #0 A
 itor
 mov A 0
-L2:
+L2
 mov #1 A
 mov A 16000
 mov 3 A
 subi 16000
 mov A 3
 jmp L3
-L4:
+L4
 mov 0 A
 mov A 16000
 mov 1 A
@@ -57,7 +57,7 @@ mov 2 A
 subi 16000
 mov A 2
 jmp L5
-L6:
+L6
 mov 1 A
 wrr A
 wrl

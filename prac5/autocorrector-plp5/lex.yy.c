@@ -946,7 +946,7 @@ YY_RULE_SETUP
 case 20:
 YY_RULE_SETUP
 #line 61 "plp5.l"
-{ RET_ATTR(if_token); }
+{ RET(if_token); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
@@ -956,7 +956,7 @@ YY_RULE_SETUP
 case 22:
 YY_RULE_SETUP
 #line 63 "plp5.l"
-{ RET_ATTR(while_token); }
+{ RET(while_token); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
@@ -1061,17 +1061,17 @@ YY_RULE_SETUP
 case 43:
 YY_RULE_SETUP
 #line 88 "plp5.l"
-{ RET_ATTR(asig); }
+{ RET(asig); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 89 "plp5.l"
-{ RET_ATTR(cori); }
+{ RET(cori); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 90 "plp5.l"
-{ RET_ATTR(cord); }
+{ RET(cord); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
@@ -1086,17 +1086,17 @@ YY_RULE_SETUP
 case 48:
 YY_RULE_SETUP
 #line 93 "plp5.l"
-{ RET_ATTR(and_token); }
+{ RET(and_token); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 94 "plp5.l"
-{ RET_ATTR(or_token); }
+{ RET(or_token); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
 #line 95 "plp5.l"
-{ RET_ATTR(not_token); }
+{ RET(not_token); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP

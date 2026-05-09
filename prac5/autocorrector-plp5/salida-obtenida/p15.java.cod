@@ -20,7 +20,7 @@ wrl
 mov 1 A
 wri A
 wrl
-L4:
+L4
 mov 4 A
 noti A
 jz L5
@@ -37,7 +37,7 @@ jz L2
 mov #1 A
 mov A 4
 jmp L3
-L2:
+L2
 mov 3 A
 wri A
 wrl
@@ -90,10 +90,10 @@ mov #1000 A
 addi 16000
 wri A
 wrl
-L1:
-L3:
+L1
+L3
 jmp L4
-L5:
+L5
 mov 2 A
 wri A
 wrl
