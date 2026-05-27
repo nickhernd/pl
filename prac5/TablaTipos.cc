@@ -4,21 +4,23 @@
 TablaTipos::TablaTipos()
 {
   // inicializar con los tipos básicos
-  
+
   unTipo b;
-  
+
   b.clase = TIPOBASICO;
-  b.tipoBase = ENTERO;  // por si acaso, aunque no se debe usar ENTERO==0 == posición en el vector 'tipos'
+
+ // por si acaso, aunque no se debe usar ENTERO==0 == posición en el vector 'tipos'
+  b.tipoBase = ENTERO;
   b.tamano = 1;
   tipos.push_back(b);
-  
-  b.tipoBase = REAL; 
+
+  b.tipoBase = REAL;
   tipos.push_back(b);
 
-  b.tipoBase = LOGICO;  
+  b.tipoBase = LOGICO;
   tipos.push_back(b);
 
-  b.tipoBase = SCVAR; 
+  b.tipoBase = SCVAR;
   tipos.push_back(b);
 }
 
