@@ -171,8 +171,17 @@ void releaseTemp(int n = 1) {
     next_tmp -= n;
 }
 
+// Returns a temp register guaranteed to be above 'above', so that code
+// using registers up to 'above' won't clobber the saved value.
+unsigned getSafeTmp(int above) {
+    if (above >= 0 && (int)next_tmp <= above) {
+        next_tmp = (unsigned)(above + 1);
+    }
+    return getTemp();
+}
 
-#line 176 "plp5.tab.c"
+
+#line 185 "plp5.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -662,13 +671,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   118,   118,   122,   125,   129,   130,   131,   133,   137,
-     142,   143,   144,   146,   146,   156,   160,   164,   164,   167,
-     203,   215,   219,   224,   233,   243,   247,   251,   267,   271,
-     275,   276,   277,   277,   311,   321,   330,   335,   341,   348,
-     356,   358,   366,   368,   399,   401,   423,   425,   447,   449,
-     461,   469,   477,   482,   487,   493,   494,   500,   509,   521,
-     553,   558
+       0,   127,   127,   131,   134,   138,   139,   140,   142,   146,
+     151,   152,   153,   155,   155,   165,   169,   173,   173,   176,
+     212,   224,   228,   233,   242,   252,   256,   260,   276,   280,
+     284,   285,   286,   286,   320,   330,   339,   344,   350,   357,
+     367,   369,   379,   381,   414,   416,   440,   442,   466,   468,
+     481,   489,   497,   502,   507,   513,   514,   521,   531,   543,
+     578,   583
 };
 #endif
 
@@ -1323,92 +1332,92 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* S: Import Class  */
-#line 118 "plp5.y"
+#line 127 "plp5.y"
                  {
     cout << (yyvsp[-1].attr)->codigo << (yyvsp[0].attr)->codigo;
 }
-#line 1331 "plp5.tab.c"
+#line 1340 "plp5.tab.c"
     break;
 
   case 3: /* Import: Import import_token SecImp pyc  */
-#line 122 "plp5.y"
+#line 131 "plp5.y"
                                         {
     (yyval.attr) = (yyvsp[-3].attr);
 }
-#line 1339 "plp5.tab.c"
+#line 1348 "plp5.tab.c"
     break;
 
   case 4: /* Import: %empty  */
-#line 125 "plp5.y"
+#line 134 "plp5.y"
   {
     (yyval.attr) = new Atributos();
 }
-#line 1347 "plp5.tab.c"
+#line 1356 "plp5.tab.c"
     break;
 
   case 5: /* SecImp: SecImp punto id  */
-#line 129 "plp5.y"
+#line 138 "plp5.y"
                          { (yyval.attr) = (yyvsp[-2].attr); }
-#line 1353 "plp5.tab.c"
+#line 1362 "plp5.tab.c"
     break;
 
   case 6: /* SecImp: SecImp punto scanner_token  */
-#line 130 "plp5.y"
+#line 139 "plp5.y"
                              { (yyval.attr) = (yyvsp[-2].attr); }
-#line 1359 "plp5.tab.c"
+#line 1368 "plp5.tab.c"
     break;
 
   case 7: /* SecImp: id  */
-#line 131 "plp5.y"
+#line 140 "plp5.y"
      { (yyval.attr) = new Atributos(); }
-#line 1365 "plp5.tab.c"
+#line 1374 "plp5.tab.c"
     break;
 
   case 8: /* Class: public_token class_token id llavei Main llaved  */
-#line 133 "plp5.y"
+#line 142 "plp5.y"
                                                        {
     (yyval.attr) = (yyvsp[-1].attr);
-}
-#line 1373 "plp5.tab.c"
-    break;
-
-  case 9: /* Main: public_token static_token void_token main_token pari string_token cori cord id pard Bloque  */
-#line 137 "plp5.y"
-                                                                                                  {
-    (yyval.attr) = (yyvsp[0].attr);
-    (yyval.attr)->codigo += "halt\n";
 }
 #line 1382 "plp5.tab.c"
     break;
 
+  case 9: /* Main: public_token static_token void_token main_token pari string_token cori cord id pard Bloque  */
+#line 146 "plp5.y"
+                                                                                                  {
+    (yyval.attr) = (yyvsp[0].attr);
+    (yyval.attr)->codigo += "halt\n";
+}
+#line 1391 "plp5.tab.c"
+    break;
+
   case 10: /* Tipo: int_type  */
-#line 142 "plp5.y"
+#line 151 "plp5.y"
                 { (yyval.attr) = new Atributos(); (yyval.attr)->tipo = ENTERO; (yyval.attr)->tam = 1; }
-#line 1388 "plp5.tab.c"
+#line 1397 "plp5.tab.c"
     break;
 
   case 11: /* Tipo: double_type  */
-#line 143 "plp5.y"
+#line 152 "plp5.y"
               { (yyval.attr) = new Atributos(); (yyval.attr)->tipo = REAL; (yyval.attr)->tam = 1; }
-#line 1394 "plp5.tab.c"
+#line 1403 "plp5.tab.c"
     break;
 
   case 12: /* Tipo: boolean  */
-#line 144 "plp5.y"
+#line 153 "plp5.y"
           { (yyval.attr) = new Atributos(); (yyval.attr)->tipo = LOGICO; (yyval.attr)->tam = 1; }
-#line 1400 "plp5.tab.c"
+#line 1409 "plp5.tab.c"
     break;
 
   case 13: /* $@1: %empty  */
-#line 146 "plp5.y"
+#line 155 "plp5.y"
                 {
     ts = new TablaSimbolos(ts);
 }
-#line 1408 "plp5.tab.c"
+#line 1417 "plp5.tab.c"
     break;
 
   case 14: /* Bloque: llavei $@1 BDecl SeqInstr llaved  */
-#line 148 "plp5.y"
+#line 157 "plp5.y"
                         {
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = (yyvsp[-2].attr)->codigo + (yyvsp[-1].attr)->codigo;
@@ -1416,42 +1425,42 @@ yyreduce:
     ts = ts->getParent();
     delete old;
 }
-#line 1420 "plp5.tab.c"
+#line 1429 "plp5.tab.c"
     break;
 
   case 15: /* BDecl: BDecl DVar  */
-#line 156 "plp5.y"
+#line 165 "plp5.y"
                    {
     (yyval.attr) = (yyvsp[-1].attr);
     (yyval.attr)->codigo += (yyvsp[0].attr)->codigo;
 }
-#line 1429 "plp5.tab.c"
+#line 1438 "plp5.tab.c"
     break;
 
   case 16: /* BDecl: %empty  */
-#line 160 "plp5.y"
+#line 169 "plp5.y"
   {
     (yyval.attr) = new Atributos();
 }
-#line 1437 "plp5.tab.c"
+#line 1446 "plp5.tab.c"
     break;
 
   case 17: /* $@2: %empty  */
-#line 164 "plp5.y"
+#line 173 "plp5.y"
             { current_type = (yyvsp[0].attr)->tipo; }
-#line 1443 "plp5.tab.c"
+#line 1452 "plp5.tab.c"
     break;
 
   case 18: /* DVar: Tipo $@2 LIdent pyc  */
-#line 164 "plp5.y"
+#line 173 "plp5.y"
                                                     {
     (yyval.attr) = (yyvsp[-1].attr);
 }
-#line 1451 "plp5.tab.c"
+#line 1460 "plp5.tab.c"
     break;
 
   case 19: /* DVar: Tipo DimSN id asig new_token Tipo Dimensiones pyc  */
-#line 167 "plp5.y"
+#line 176 "plp5.y"
                                                     {
     if (ts->get((yyvsp[-5].attr)->lexema)) {
         msgError(ERR_YADECL, (yyvsp[-5].attr)->nlin, (yyvsp[-5].attr)->ncol, (yyvsp[-5].attr)->lexema.c_str());
@@ -1488,11 +1497,11 @@ yyreduce:
     next_dir += total_tam;
     (yyval.attr) = new Atributos();
 }
-#line 1492 "plp5.tab.c"
+#line 1501 "plp5.tab.c"
     break;
 
   case 20: /* DVar: scanner_token id asig new_token scanner_token pari system_token punto in_token pard pyc  */
-#line 203 "plp5.y"
+#line 212 "plp5.y"
                                                                                           {
     Simbolo s;
     s.nombre = (yyvsp[-9].attr)->lexema;
@@ -1504,29 +1513,29 @@ yyreduce:
     }
     (yyval.attr) = new Atributos();
 }
-#line 1508 "plp5.tab.c"
+#line 1517 "plp5.tab.c"
     break;
 
   case 21: /* DimSN: DimSN cori cord  */
-#line 215 "plp5.y"
+#line 224 "plp5.y"
                         {
     (yyval.attr) = (yyvsp[-2].attr);
     (yyval.attr)->ndims++;
 }
-#line 1517 "plp5.tab.c"
+#line 1526 "plp5.tab.c"
     break;
 
   case 22: /* DimSN: cori cord  */
-#line 219 "plp5.y"
+#line 228 "plp5.y"
             {
     (yyval.attr) = new Atributos();
     (yyval.attr)->ndims = 1;
 }
-#line 1526 "plp5.tab.c"
+#line 1535 "plp5.tab.c"
     break;
 
   case 23: /* Dimensiones: cori nentero cord Dimensiones  */
-#line 224 "plp5.y"
+#line 233 "plp5.y"
                                             {
     int val = atoi((yyvsp[-2].attr)->lexema.c_str());
     if (val <= 0) {
@@ -1536,11 +1545,11 @@ yyreduce:
     (yyval.attr)->ndims++;
     (yyval.attr)->dims.insert((yyval.attr)->dims.begin(), val);
 }
-#line 1540 "plp5.tab.c"
+#line 1549 "plp5.tab.c"
     break;
 
   case 24: /* Dimensiones: cori nentero cord  */
-#line 233 "plp5.y"
+#line 242 "plp5.y"
                     {
     int val = atoi((yyvsp[-1].attr)->lexema.c_str());
     if (val <= 0) {
@@ -1550,28 +1559,28 @@ yyreduce:
     (yyval.attr)->ndims = 1;
     (yyval.attr)->dims.push_back(val);
 }
-#line 1554 "plp5.tab.c"
+#line 1563 "plp5.tab.c"
     break;
 
   case 25: /* LIdent: LIdent coma Variable  */
-#line 243 "plp5.y"
+#line 252 "plp5.y"
                               {
     (yyval.attr) = (yyvsp[-2].attr);
     (yyval.attr)->codigo += (yyvsp[0].attr)->codigo;
 }
-#line 1563 "plp5.tab.c"
+#line 1572 "plp5.tab.c"
     break;
 
   case 26: /* LIdent: Variable  */
-#line 247 "plp5.y"
+#line 256 "plp5.y"
            {
     (yyval.attr) = (yyvsp[0].attr);
 }
-#line 1571 "plp5.tab.c"
+#line 1580 "plp5.tab.c"
     break;
 
   case 27: /* Variable: id  */
-#line 251 "plp5.y"
+#line 260 "plp5.y"
               {
     Simbolo s;
     s.nombre = (yyvsp[0].attr)->lexema;
@@ -1587,49 +1596,49 @@ yyreduce:
     next_dir++;
     (yyval.attr) = new Atributos();
 }
-#line 1591 "plp5.tab.c"
+#line 1600 "plp5.tab.c"
     break;
 
   case 28: /* SeqInstr: SeqInstr Instr  */
-#line 267 "plp5.y"
+#line 276 "plp5.y"
                           {
     (yyval.attr) = (yyvsp[-1].attr);
     (yyval.attr)->codigo += (yyvsp[0].attr)->codigo;
 }
-#line 1600 "plp5.tab.c"
+#line 1609 "plp5.tab.c"
     break;
 
   case 29: /* SeqInstr: %empty  */
-#line 271 "plp5.y"
+#line 280 "plp5.y"
   {
     (yyval.attr) = new Atributos();
 }
-#line 1608 "plp5.tab.c"
+#line 1617 "plp5.tab.c"
     break;
 
   case 30: /* Instr: pyc  */
-#line 275 "plp5.y"
+#line 284 "plp5.y"
             { (yyval.attr) = new Atributos(); }
-#line 1614 "plp5.tab.c"
+#line 1623 "plp5.tab.c"
     break;
 
   case 31: /* Instr: Bloque  */
-#line 276 "plp5.y"
+#line 285 "plp5.y"
          { (yyval.attr) = (yyvsp[0].attr); }
-#line 1620 "plp5.tab.c"
+#line 1629 "plp5.tab.c"
     break;
 
   case 32: /* @3: %empty  */
-#line 277 "plp5.y"
+#line 286 "plp5.y"
            {
     (yyval.attr) = new Atributos();
     (yyval.attr)->dir = ((yyvsp[-1].attr)->ref == "@A") ? getTemp() : -1;
 }
-#line 1629 "plp5.tab.c"
+#line 1638 "plp5.tab.c"
     break;
 
   case 33: /* Instr: Ref asig @3 Expr pyc  */
-#line 280 "plp5.y"
+#line 289 "plp5.y"
            {
     int tmp_addr = (yyvsp[-2].attr)->dir;
     (yyval.attr) = new Atributos();
@@ -1661,11 +1670,11 @@ yyreduce:
         (yyval.attr)->codigo += "mov A " + (yyvsp[-4].attr)->ref + "\n";
     }
 }
-#line 1665 "plp5.tab.c"
+#line 1674 "plp5.tab.c"
     break;
 
   case 34: /* Instr: system_token punto out_token punto println_token pari Expr pard pyc  */
-#line 311 "plp5.y"
+#line 320 "plp5.y"
                                                                       {
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = (yyvsp[-2].attr)->codigo;
@@ -1676,11 +1685,11 @@ yyreduce:
     }
     (yyval.attr)->codigo += "wrl\n";
 }
-#line 1680 "plp5.tab.c"
+#line 1689 "plp5.tab.c"
     break;
 
   case 35: /* Instr: system_token punto out_token punto print_token pari Expr pard pyc  */
-#line 321 "plp5.y"
+#line 330 "plp5.y"
                                                                     {
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = (yyvsp[-2].attr)->codigo;
@@ -1690,84 +1699,89 @@ yyreduce:
         (yyval.attr)->codigo += "wri A\n";
     }
 }
-#line 1694 "plp5.tab.c"
+#line 1703 "plp5.tab.c"
     break;
 
   case 36: /* Instr: IfGuard Instr  */
-#line 330 "plp5.y"
+#line 339 "plp5.y"
                 {
     (yyval.attr) = new Atributos();
     string label = newLabel();
     (yyval.attr)->codigo = (yyvsp[-1].attr)->codigo + "jz " + label + "\n" + (yyvsp[0].attr)->codigo + label + "\n";
 }
-#line 1704 "plp5.tab.c"
+#line 1713 "plp5.tab.c"
     break;
 
   case 37: /* Instr: IfGuard Instr else_token Instr  */
-#line 335 "plp5.y"
+#line 344 "plp5.y"
                                  {
     (yyval.attr) = new Atributos();
     string label_else = newLabel();
     string label_end = newLabel();
     (yyval.attr)->codigo = (yyvsp[-3].attr)->codigo + "jz " + label_else + "\n" + (yyvsp[-2].attr)->codigo + "jmp " + label_end + "\n" + label_else + "\n" + (yyvsp[0].attr)->codigo + label_end + "\n";
 }
-#line 1715 "plp5.tab.c"
+#line 1724 "plp5.tab.c"
     break;
 
   case 38: /* Instr: WhileGuard Instr  */
-#line 341 "plp5.y"
+#line 350 "plp5.y"
                    {
     (yyval.attr) = new Atributos();
     string label_start = newLabel();
     string label_end = newLabel();
     (yyval.attr)->codigo = label_start + "\n" + (yyvsp[-1].attr)->codigo + "jz " + label_end + "\n" + (yyvsp[0].attr)->codigo + "jmp " + label_start + "\n" + label_end + "\n";
 }
-#line 1726 "plp5.tab.c"
+#line 1735 "plp5.tab.c"
     break;
 
   case 39: /* Expr: Expr or_token EConj  */
-#line 348 "plp5.y"
+#line 357 "plp5.y"
                            {
     if ((yyvsp[-2].attr)->tipo != LOGICO || (yyvsp[0].attr)->tipo != LOGICO) msgError(ERR_OPNOBOOL, (yyvsp[-1].attr)->nlin, (yyvsp[-1].attr)->ncol, "||");
     (yyval.attr) = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp((yyvsp[-2].attr)->max_tmp_used);
     (yyval.attr)->codigo = (yyvsp[0].attr)->codigo + "mov A " + to_string(tmp) + "\n" + (yyvsp[-2].attr)->codigo + "ori " + to_string(tmp) + "\n";
     (yyval.attr)->tipo = LOGICO;
-    releaseTemp();
+    (yyval.attr)->max_tmp_used = max(max((yyvsp[-2].attr)->max_tmp_used, (yyvsp[0].attr)->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-#line 1739 "plp5.tab.c"
+#line 1750 "plp5.tab.c"
     break;
 
   case 40: /* Expr: EConj  */
-#line 356 "plp5.y"
-        { (yyval.attr) = (yyvsp[0].attr); }
-#line 1745 "plp5.tab.c"
+#line 367 "plp5.y"
+        { (yyval.attr) = (yyvsp[0].attr); (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used; }
+#line 1756 "plp5.tab.c"
     break;
 
   case 41: /* EConj: EConj and_token ERel  */
-#line 358 "plp5.y"
+#line 369 "plp5.y"
                              {
     if ((yyvsp[-2].attr)->tipo != LOGICO || (yyvsp[0].attr)->tipo != LOGICO) msgError(ERR_OPNOBOOL, (yyvsp[-1].attr)->nlin, (yyvsp[-1].attr)->ncol, "&&");
     (yyval.attr) = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp((yyvsp[-2].attr)->max_tmp_used);
     (yyval.attr)->codigo = (yyvsp[0].attr)->codigo + "mov A " + to_string(tmp) + "\n" + (yyvsp[-2].attr)->codigo + "andi " + to_string(tmp) + "\n";
     (yyval.attr)->tipo = LOGICO;
-    releaseTemp();
+    (yyval.attr)->max_tmp_used = max(max((yyvsp[-2].attr)->max_tmp_used, (yyvsp[0].attr)->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-#line 1758 "plp5.tab.c"
+#line 1771 "plp5.tab.c"
     break;
 
   case 42: /* EConj: ERel  */
-#line 366 "plp5.y"
-       { (yyval.attr) = (yyvsp[0].attr); }
-#line 1764 "plp5.tab.c"
+#line 379 "plp5.y"
+       { (yyval.attr) = (yyvsp[0].attr); (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used; }
+#line 1777 "plp5.tab.c"
     break;
 
   case 43: /* ERel: Esimple relop Esimple  */
-#line 368 "plp5.y"
+#line 381 "plp5.y"
                              {
     (yyval.attr) = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp((yyvsp[-2].attr)->max_tmp_used);
     (yyval.attr)->codigo = (yyvsp[0].attr)->codigo;
     if ((yyvsp[-2].attr)->tipo == REAL && (yyvsp[0].attr)->tipo == ENTERO) (yyval.attr)->codigo += "itor\n";
     (yyval.attr)->codigo += "mov A " + to_string(tmp) + "\n";
@@ -1794,22 +1808,24 @@ yyreduce:
         msgError(ERR_TIPOS, (yyvsp[-1].attr)->nlin, (yyvsp[-1].attr)->ncol, (yyvsp[-1].attr)->lexema.c_str());
     }
     (yyval.attr)->tipo = LOGICO;
-    releaseTemp();
+    (yyval.attr)->max_tmp_used = max(max((yyvsp[-2].attr)->max_tmp_used, (yyvsp[0].attr)->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-#line 1800 "plp5.tab.c"
+#line 1815 "plp5.tab.c"
     break;
 
   case 44: /* ERel: Esimple  */
-#line 399 "plp5.y"
-          { (yyval.attr) = (yyvsp[0].attr); }
-#line 1806 "plp5.tab.c"
+#line 414 "plp5.y"
+          { (yyval.attr) = (yyvsp[0].attr); (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used; }
+#line 1821 "plp5.tab.c"
     break;
 
   case 45: /* Esimple: Esimple addop Term  */
-#line 401 "plp5.y"
+#line 416 "plp5.y"
                              {
     (yyval.attr) = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp((yyvsp[-2].attr)->max_tmp_used);
     (yyval.attr)->codigo = (yyvsp[0].attr)->codigo;
     if ((yyvsp[-2].attr)->tipo == REAL && (yyvsp[0].attr)->tipo == ENTERO) (yyval.attr)->codigo += "itor\n";
     (yyval.attr)->codigo += "mov A " + to_string(tmp) + "\n";
@@ -1827,22 +1843,24 @@ yyreduce:
     } else {
         msgError(ERR_NUM, (yyvsp[-1].attr)->nlin, (yyvsp[-1].attr)->ncol, (yyvsp[-1].attr)->lexema.c_str());
     }
-    releaseTemp();
+    (yyval.attr)->max_tmp_used = max(max((yyvsp[-2].attr)->max_tmp_used, (yyvsp[0].attr)->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-#line 1833 "plp5.tab.c"
+#line 1850 "plp5.tab.c"
     break;
 
   case 46: /* Esimple: Term  */
-#line 423 "plp5.y"
-       { (yyval.attr) = (yyvsp[0].attr); }
-#line 1839 "plp5.tab.c"
+#line 440 "plp5.y"
+       { (yyval.attr) = (yyvsp[0].attr); (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used; }
+#line 1856 "plp5.tab.c"
     break;
 
   case 47: /* Term: Term mulop Factor  */
-#line 425 "plp5.y"
+#line 442 "plp5.y"
                          {
     (yyval.attr) = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp((yyvsp[-2].attr)->max_tmp_used);
     (yyval.attr)->codigo = (yyvsp[0].attr)->codigo;
     if ((yyvsp[-2].attr)->tipo == REAL && (yyvsp[0].attr)->tipo == ENTERO) (yyval.attr)->codigo += "itor\n";
     (yyval.attr)->codigo += "mov A " + to_string(tmp) + "\n";
@@ -1860,19 +1878,20 @@ yyreduce:
     } else {
         msgError(ERR_NUM, (yyvsp[-1].attr)->nlin, (yyvsp[-1].attr)->ncol, (yyvsp[-1].attr)->lexema.c_str());
     }
-    releaseTemp();
+    (yyval.attr)->max_tmp_used = max(max((yyvsp[-2].attr)->max_tmp_used, (yyvsp[0].attr)->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-#line 1866 "plp5.tab.c"
+#line 1885 "plp5.tab.c"
     break;
 
   case 48: /* Term: Factor  */
-#line 447 "plp5.y"
-         { (yyval.attr) = (yyvsp[0].attr); }
-#line 1872 "plp5.tab.c"
+#line 466 "plp5.y"
+         { (yyval.attr) = (yyvsp[0].attr); (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used; }
+#line 1891 "plp5.tab.c"
     break;
 
   case 49: /* Factor: Ref  */
-#line 449 "plp5.y"
+#line 468 "plp5.y"
              {
     if (tt.tipos[(yyvsp[0].attr)->tipo].clase == TIPOARRAY) {
         msgError(ERR_FALTAN, (yyvsp[0].attr)->nlin, (yyvsp[0].attr)->ncol, "");
@@ -1884,12 +1903,13 @@ yyreduce:
         (yyval.attr)->codigo = (yyvsp[0].attr)->codigo + "mov " + (yyvsp[0].attr)->ref + " A\n";
     }
     (yyval.attr)->tipo = (yyvsp[0].attr)->tipo;
+    (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used;
 }
-#line 1889 "plp5.tab.c"
+#line 1909 "plp5.tab.c"
     break;
 
   case 50: /* Factor: id punto nextint pari pard  */
-#line 461 "plp5.y"
+#line 481 "plp5.y"
                              {
     Simbolo *s = ts->get((yyvsp[-4].attr)->lexema);
     if (!s) msgError(ERR_NODECL, (yyvsp[-4].attr)->nlin, (yyvsp[-4].attr)->ncol, (yyvsp[-4].attr)->lexema.c_str());
@@ -1898,11 +1918,11 @@ yyreduce:
     (yyval.attr)->codigo = "rdi A\n";
     (yyval.attr)->tipo = ENTERO;
 }
-#line 1902 "plp5.tab.c"
+#line 1922 "plp5.tab.c"
     break;
 
   case 51: /* Factor: id punto nextdouble pari pard  */
-#line 469 "plp5.y"
+#line 489 "plp5.y"
                                 {
     Simbolo *s = ts->get((yyvsp[-4].attr)->lexema);
     if (!s) msgError(ERR_NODECL, (yyvsp[-4].attr)->nlin, (yyvsp[-4].attr)->ncol, (yyvsp[-4].attr)->lexema.c_str());
@@ -1911,72 +1931,74 @@ yyreduce:
     (yyval.attr)->codigo = "rdr A\n";
     (yyval.attr)->tipo = REAL;
 }
-#line 1915 "plp5.tab.c"
+#line 1935 "plp5.tab.c"
     break;
 
   case 52: /* Factor: nentero  */
-#line 477 "plp5.y"
+#line 497 "plp5.y"
           {
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = "mov #" + (yyvsp[0].attr)->lexema + " A\n";
     (yyval.attr)->tipo = ENTERO;
 }
-#line 1925 "plp5.tab.c"
+#line 1945 "plp5.tab.c"
     break;
 
   case 53: /* Factor: nreal  */
-#line 482 "plp5.y"
+#line 502 "plp5.y"
         {
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = "mov $" + (yyvsp[0].attr)->lexema + " A\n";
     (yyval.attr)->tipo = REAL;
 }
-#line 1935 "plp5.tab.c"
+#line 1955 "plp5.tab.c"
     break;
 
   case 54: /* Factor: ctebool  */
-#line 487 "plp5.y"
+#line 507 "plp5.y"
           {
     (yyval.attr) = new Atributos();
     if ((yyvsp[0].attr)->lexema == "true") (yyval.attr)->codigo = "mov #1 A\n";
     else (yyval.attr)->codigo = "mov #0 A\n";
     (yyval.attr)->tipo = LOGICO;
 }
-#line 1946 "plp5.tab.c"
+#line 1966 "plp5.tab.c"
     break;
 
   case 55: /* Factor: pari Expr pard  */
-#line 493 "plp5.y"
-                 { (yyval.attr) = (yyvsp[-1].attr); }
-#line 1952 "plp5.tab.c"
+#line 513 "plp5.y"
+                 { (yyval.attr) = (yyvsp[-1].attr); (yyval.attr)->max_tmp_used = (yyvsp[-1].attr)->max_tmp_used; }
+#line 1972 "plp5.tab.c"
     break;
 
   case 56: /* Factor: not_token Factor  */
-#line 494 "plp5.y"
+#line 514 "plp5.y"
                    {
     if ((yyvsp[0].attr)->tipo != LOGICO) msgError(ERR_OPNOBOOL, (yyvsp[-1].attr)->nlin, (yyvsp[-1].attr)->ncol, "!");
     (yyval.attr) = new Atributos();
-    (yyval.attr)->codigo = (yyvsp[0].attr)->codigo + "noti A\n";
+    (yyval.attr)->codigo = (yyvsp[0].attr)->codigo + "noti\n";
     (yyval.attr)->tipo = LOGICO;
+    (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used;
 }
-#line 1963 "plp5.tab.c"
+#line 1984 "plp5.tab.c"
     break;
 
   case 57: /* Factor: pari Tipo pard Factor  */
-#line 500 "plp5.y"
+#line 521 "plp5.y"
                         {
     (yyval.attr) = new Atributos();
     (yyval.attr)->codigo = (yyvsp[0].attr)->codigo;
     if ((yyvsp[-2].attr)->tipo == REAL && (yyvsp[0].attr)->tipo == ENTERO) (yyval.attr)->codigo += "itor\n";
     else if ((yyvsp[-2].attr)->tipo == ENTERO && (yyvsp[0].attr)->tipo == REAL) (yyval.attr)->codigo += "rtoi\n";
-    else if ((yyvsp[-2].attr)->tipo == LOGICO && (yyvsp[0].attr)->tipo == ENTERO) (yyval.attr)->codigo += "noti\nnoti A\n"; 
+    else if ((yyvsp[-2].attr)->tipo == LOGICO && (yyvsp[0].attr)->tipo == ENTERO) (yyval.attr)->codigo += "noti\nnoti\n";
     (yyval.attr)->tipo = (yyvsp[-2].attr)->tipo;
+    (yyval.attr)->max_tmp_used = (yyvsp[0].attr)->max_tmp_used;
 }
-#line 1976 "plp5.tab.c"
+#line 1998 "plp5.tab.c"
     break;
 
   case 58: /* Ref: id  */
-#line 509 "plp5.y"
+#line 531 "plp5.y"
          {
     Simbolo *s = ts->get((yyvsp[0].attr)->lexema);
     if (!s) msgError(ERR_NODECL, (yyvsp[0].attr)->nlin, (yyvsp[0].attr)->ncol, (yyvsp[0].attr)->lexema.c_str());
@@ -1989,11 +2011,11 @@ yyreduce:
     (yyval.attr)->nlin = (yyvsp[0].attr)->nlin;
     (yyval.attr)->ncol = (yyvsp[0].attr)->ncol;
 }
-#line 1993 "plp5.tab.c"
+#line 2015 "plp5.tab.c"
     break;
 
   case 59: /* Ref: Ref cori Esimple cord  */
-#line 521 "plp5.y"
+#line 543 "plp5.y"
                         {
     if (tt.tipos[(yyvsp[-3].attr)->tipo].clase != TIPOARRAY) msgError(ERR_SOBRAN, (yyvsp[-2].attr)->nlin, (yyvsp[-2].attr)->ncol, "");
     if ((yyvsp[-1].attr)->tipo != ENTERO) msgError(ERR_INDICE_ENTERO, (yyvsp[-2].attr)->nlin, (yyvsp[-2].attr)->ncol, "");
@@ -2009,45 +2031,48 @@ yyreduce:
     
     (yyval.attr)->codigo = (yyvsp[-3].attr)->codigo;
     if ((yyvsp[-3].attr)->ref == "@A") {
-        unsigned tmp = getTemp();
+        unsigned pre = next_tmp;
+        unsigned tmp = getSafeTmp((yyvsp[-1].attr)->max_tmp_used);
         (yyval.attr)->codigo += "mov A " + to_string(tmp) + "\n";
         (yyval.attr)->codigo += (yyvsp[-1].attr)->codigo;
         if (tam_base > 1) (yyval.attr)->codigo += "muli #" + to_string(tam_base) + "\n";
         (yyval.attr)->codigo += "addi " + to_string(tmp) + "\n";
-        releaseTemp();
+        (yyval.attr)->max_tmp_used = max(max((yyvsp[-3].attr)->max_tmp_used, (yyvsp[-1].attr)->max_tmp_used), (int)tmp);
+        next_tmp = pre;
     } else {
         (yyval.attr)->codigo += (yyvsp[-1].attr)->codigo;
         if (tam_base > 1) (yyval.attr)->codigo += "muli #" + to_string(tam_base) + "\n";
         (yyval.attr)->codigo += "addi #" + (yyvsp[-3].attr)->ref + "\n";
+        (yyval.attr)->max_tmp_used = max((yyvsp[-3].attr)->max_tmp_used, (yyvsp[-1].attr)->max_tmp_used);
     }
     (yyval.attr)->ref = "@A";
     (yyval.attr)->tipo = tbase;
     (yyval.attr)->nlin = (yyvsp[0].attr)->nlin;
     (yyval.attr)->ncol = (yyvsp[0].attr)->ncol;
 }
-#line 2029 "plp5.tab.c"
+#line 2054 "plp5.tab.c"
     break;
 
   case 60: /* IfGuard: if_token pari Expr pard  */
-#line 553 "plp5.y"
+#line 578 "plp5.y"
                                   {
     if ((yyvsp[-1].attr)->tipo != LOGICO) msgError(ERR_TIPOSIFW, (yyvsp[-3].attr)->nlin, (yyvsp[-3].attr)->ncol, "");
     (yyval.attr) = (yyvsp[-1].attr);
 }
-#line 2038 "plp5.tab.c"
+#line 2063 "plp5.tab.c"
     break;
 
   case 61: /* WhileGuard: while_token pari Expr pard  */
-#line 558 "plp5.y"
+#line 583 "plp5.y"
                                         {
     if ((yyvsp[-1].attr)->tipo != LOGICO) msgError(ERR_TIPOSIFW, (yyvsp[-3].attr)->nlin, (yyvsp[-3].attr)->ncol, "");
     (yyval.attr) = (yyvsp[-1].attr);
 }
-#line 2047 "plp5.tab.c"
+#line 2072 "plp5.tab.c"
     break;
 
 
-#line 2051 "plp5.tab.c"
+#line 2076 "plp5.tab.c"
 
       default: break;
     }
@@ -2240,7 +2265,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 563 "plp5.y"
+#line 588 "plp5.y"
 
 
 int main(int argc, char *argv[]) {

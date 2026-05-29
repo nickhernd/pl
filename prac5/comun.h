@@ -50,7 +50,9 @@ struct Atributos {
     int nlin;
     int ncol;
 
-    Atributos() : codigo(""), tipo(-1), dir(0), tam(0), tbase(0), ndims(0), ref(""), lexema(""), nlin(0), ncol(0) {}
+    int max_tmp_used;
+
+    Atributos() : codigo(""), tipo(-1), dir(0), tam(0), tbase(0), ndims(0), ref(""), lexema(""), nlin(0), ncol(0), max_tmp_used(-1) {}
 };
 
 void msgError(int nerror, int nlin, int ncol, const char *s);

@@ -101,6 +101,15 @@ void releaseTemp(int n = 1) {
     next_tmp -= n;
 }
 
+// Returns a temp register guaranteed to be above 'above', so that code
+// using registers up to 'above' won't clobber the saved value.
+unsigned getSafeTmp(int above) {
+    if (above >= 0 && (int)next_tmp <= above) {
+        next_tmp = (unsigned)(above + 1);
+    }
+    return getTemp();
+}
+
 %}
 
 %union {
@@ -348,26 +357,31 @@ Instr : pyc { $$ = new Atributos(); }
 Expr : Expr or_token EConj {
     if ($1->tipo != LOGICO || $3->tipo != LOGICO) msgError(ERR_OPNOBOOL, $2->nlin, $2->ncol, "||");
     $$ = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp($1->max_tmp_used);
     $$->codigo = $3->codigo + "mov A " + to_string(tmp) + "\n" + $1->codigo + "ori " + to_string(tmp) + "\n";
     $$->tipo = LOGICO;
-    releaseTemp();
+    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-| EConj { $$ = $1; }
+| EConj { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
 
 EConj : EConj and_token ERel {
     if ($1->tipo != LOGICO || $3->tipo != LOGICO) msgError(ERR_OPNOBOOL, $2->nlin, $2->ncol, "&&");
     $$ = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp($1->max_tmp_used);
     $$->codigo = $3->codigo + "mov A " + to_string(tmp) + "\n" + $1->codigo + "andi " + to_string(tmp) + "\n";
     $$->tipo = LOGICO;
-    releaseTemp();
+    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-| ERel { $$ = $1; }
+| ERel { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
 
 ERel : Esimple relop Esimple {
     $$ = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp($1->max_tmp_used);
     $$->codigo = $3->codigo;
     if ($1->tipo == REAL && $3->tipo == ENTERO) $$->codigo += "itor\n";
     $$->codigo += "mov A " + to_string(tmp) + "\n";
@@ -394,13 +408,15 @@ ERel : Esimple relop Esimple {
         msgError(ERR_TIPOS, $2->nlin, $2->ncol, $2->lexema.c_str());
     }
     $$->tipo = LOGICO;
-    releaseTemp();
+    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-| Esimple { $$ = $1; }
+| Esimple { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
 
 Esimple : Esimple addop Term {
     $$ = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp($1->max_tmp_used);
     $$->codigo = $3->codigo;
     if ($1->tipo == REAL && $3->tipo == ENTERO) $$->codigo += "itor\n";
     $$->codigo += "mov A " + to_string(tmp) + "\n";
@@ -418,13 +434,15 @@ Esimple : Esimple addop Term {
     } else {
         msgError(ERR_NUM, $2->nlin, $2->ncol, $2->lexema.c_str());
     }
-    releaseTemp();
+    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-| Term { $$ = $1; }
+| Term { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
 
 Term : Term mulop Factor {
     $$ = new Atributos();
-    unsigned tmp = getTemp();
+    unsigned pre = next_tmp;
+    unsigned tmp = getSafeTmp($1->max_tmp_used);
     $$->codigo = $3->codigo;
     if ($1->tipo == REAL && $3->tipo == ENTERO) $$->codigo += "itor\n";
     $$->codigo += "mov A " + to_string(tmp) + "\n";
@@ -442,9 +460,10 @@ Term : Term mulop Factor {
     } else {
         msgError(ERR_NUM, $2->nlin, $2->ncol, $2->lexema.c_str());
     }
-    releaseTemp();
+    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
+    next_tmp = pre;
 }
-| Factor { $$ = $1; }
+| Factor { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
 
 Factor : Ref {
     if (tt.tipos[$1->tipo].clase == TIPOARRAY) {
@@ -457,6 +476,7 @@ Factor : Ref {
         $$->codigo = $1->codigo + "mov " + $1->ref + " A\n";
     }
     $$->tipo = $1->tipo;
+    $$->max_tmp_used = $1->max_tmp_used;
 }
 | id punto nextint pari pard {
     Simbolo *s = ts->get($1->lexema);
@@ -490,20 +510,22 @@ Factor : Ref {
     else $$->codigo = "mov #0 A\n";
     $$->tipo = LOGICO;
 }
-| pari Expr pard { $$ = $2; }
+| pari Expr pard { $$ = $2; $$->max_tmp_used = $2->max_tmp_used; }
 | not_token Factor {
     if ($2->tipo != LOGICO) msgError(ERR_OPNOBOOL, $1->nlin, $1->ncol, "!");
     $$ = new Atributos();
-    $$->codigo = $2->codigo + "noti A\n";
+    $$->codigo = $2->codigo + "noti\n";
     $$->tipo = LOGICO;
+    $$->max_tmp_used = $2->max_tmp_used;
 }
 | pari Tipo pard Factor {
     $$ = new Atributos();
     $$->codigo = $4->codigo;
     if ($2->tipo == REAL && $4->tipo == ENTERO) $$->codigo += "itor\n";
     else if ($2->tipo == ENTERO && $4->tipo == REAL) $$->codigo += "rtoi\n";
-    else if ($2->tipo == LOGICO && $4->tipo == ENTERO) $$->codigo += "noti\nnoti A\n"; 
+    else if ($2->tipo == LOGICO && $4->tipo == ENTERO) $$->codigo += "noti\nnoti\n";
     $$->tipo = $2->tipo;
+    $$->max_tmp_used = $4->max_tmp_used;
 }
 
 Ref : id {
@@ -533,16 +555,19 @@ Ref : id {
     
     $$->codigo = $1->codigo;
     if ($1->ref == "@A") {
-        unsigned tmp = getTemp();
+        unsigned pre = next_tmp;
+        unsigned tmp = getSafeTmp($3->max_tmp_used);
         $$->codigo += "mov A " + to_string(tmp) + "\n";
         $$->codigo += $3->codigo;
         if (tam_base > 1) $$->codigo += "muli #" + to_string(tam_base) + "\n";
         $$->codigo += "addi " + to_string(tmp) + "\n";
-        releaseTemp();
+        $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
+        next_tmp = pre;
     } else {
         $$->codigo += $3->codigo;
         if (tam_base > 1) $$->codigo += "muli #" + to_string(tam_base) + "\n";
         $$->codigo += "addi #" + $1->ref + "\n";
+        $$->max_tmp_used = max($1->max_tmp_used, $3->max_tmp_used);
     }
     $$->ref = "@A";
     $$->tipo = tbase;

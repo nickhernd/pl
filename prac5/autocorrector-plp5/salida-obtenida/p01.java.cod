@@ -21,12 +21,12 @@ mov 2 A
 addi 16000
 mov A 3
 mov #2 A
-mov A 16000
+mov A 16001
 mov #2 A
 mov A 16000
 mov 3 A
 divi 16000
-divi 16000
+divi 16001
 mov A 4
 mov 4 A
 wri A

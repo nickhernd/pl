@@ -89,21 +89,21 @@ mov 39 A
 lssi 16000
 jz L8
 mov 39 A
-mov A 16000
+mov A 16003
 mov #2 A
 mov A 16000
 mov 38 A
 muli 16000
-mov A 16000
+mov A 16002
 mov #2 A
-mov A 16000
+mov A 16001
 mov #3 A
 mov A 16000
 mov 37 A
 muli 16000
-muli 16000
-addi 16000
-addi 16000
+muli 16001
+addi 16002
+addi 16003
 addi #18
 mov A 16000
 mov 37 A
@@ -164,7 +164,7 @@ mov @A A
 mov A 16000
 mov 40 A
 lssi 16000
-mov A 16000
+mov A 16001
 mov #1 A
 mov A 16000
 mov #0 A
@@ -172,7 +172,7 @@ subi 16000
 mov A 16000
 mov 38 A
 neqi 16000
-andi 16000
+andi 16001
 jz L14
 mov #1 A
 mov A 16000

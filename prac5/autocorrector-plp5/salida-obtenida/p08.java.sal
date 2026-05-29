@@ -1,5 +1,1 @@
-
-ERROR(m2r) al leer un valor de la posicion de memoria 19 sin haberlo
-inicializado, en la instrucción 153
-Línea 153: mov @A A
-
+102

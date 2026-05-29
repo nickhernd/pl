@@ -3,12 +3,12 @@ mov A 4
 rdi A
 mov A 0
 mov #2 A
-mov A 16000
+mov A 16001
 mov #3 A
 mov A 16000
 mov 0 A
 divi 16000
-muli 16000
+muli 16001
 mov A 1
 mov #1 A
 mov A 2
@@ -22,7 +22,7 @@ wri A
 wrl
 L4
 mov 4 A
-noti A
+noti
 jz L5
 mov #1 A
 mov A 16000
@@ -60,7 +60,7 @@ muli 16000
 wri A
 wrl
 mov 1 A
-mov A 16000
+mov A 16001
 mov 3 A
 mov A 16000
 mov 1 A
@@ -68,10 +68,10 @@ divi 16000
 mov A 16000
 mov 3 A
 muli 16000
-eqli 16000
-mov A 16000
+eqli 16001
+mov A 16002
 mov 0 A
-mov A 16000
+mov A 16001
 mov 3 A
 mov A 16000
 mov 0 A
@@ -79,8 +79,8 @@ divi 16000
 mov A 16000
 mov 3 A
 muli 16000
-eqli 16000
-andi 16000
+eqli 16001
+andi 16002
 jz L1
 mov 3 A
 mov A 2

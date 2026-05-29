@@ -27,14 +27,14 @@ mov 0 A
 subi 16001
 addi #1
 mov @A A
-mov A 16001
+mov A 16002
 mov #1 A
 mov A 16001
 mov 0 A
 subi 16001
 addi #1
 mov @A A
-addi 16001
+addi 16002
 mov 16000 B
 mov A @B+0
 mov #1 A
