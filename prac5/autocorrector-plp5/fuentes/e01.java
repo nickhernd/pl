@@ -1,9 +1,0 @@
-
-public class e01 {
-
-  public static void main(String[] args)
-  {
-    int[] a = new int[10][5];
-      //  ^ las dimensiones deben ser iguales ...  
-  }
-}

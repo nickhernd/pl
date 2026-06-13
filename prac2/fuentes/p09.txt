@@ -1,5 +1,0 @@
-class Tipos {
-  fun prueba {
-    float resultado
-  }
-}

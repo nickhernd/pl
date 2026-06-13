@@ -1,5 +1,0 @@
-class PuntoDecimal {
-  fun test {
-    print 99.
-  }
-}

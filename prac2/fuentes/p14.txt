@@ -1,9 +1,0 @@
-class Outer {
-  fun f1 {
-    print 1
-  }
-  fun f2 {
-    int x ;
-    x = x + 10
-  }
-}

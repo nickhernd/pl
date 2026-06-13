@@ -1,4 +1,0 @@
-class SinCierre {
-  fun test {
-    print 7
-  }
