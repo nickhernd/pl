@@ -8,6 +8,7 @@
 #include "comun.h"
 #include "TablaSimbolos.h"
 #include "TablaTipos.h"
+#include "ASTNodes.h"
 
 using namespace std;
 
@@ -16,6 +17,8 @@ extern int nlin, ncol;
 extern char *yytext;
 extern int findefichero;
 extern FILE *yyin;
+
+Node* rootAST = nullptr;
 
 void msgError(int nerror, int nlin, int ncol, const char *s) {
      switch (nerror) {
@@ -101,8 +104,6 @@ void releaseTemp(int n = 1) {
     next_tmp -= n;
 }
 
-// Returns a temp register guaranteed to be above 'above', so that code
-// using registers up to 'above' won't clobber the saved value.
 unsigned getSafeTmp(int above) {
     if (above >= 0 && (int)next_tmp <= above) {
         next_tmp = (unsigned)(above + 1);
@@ -112,20 +113,33 @@ unsigned getSafeTmp(int above) {
 
 %}
 
+%code requires {
+  #include "ASTNodes.h"
+  #include "comun.h"
+}
+
 %union {
     char *lexema;
     Atributos *attr;
+    Node *node;
+    StmtNode *stmt;
+    ExprNode *expr;
+    BlockNode *block;
 }
 
 %token <attr> id nentero nreal relop addop mulop ctebool asig cori cord and_token or_token not_token if_token while_token
 %token boolean int_type double_type main_token system_token out_token in_token print_token println_token string_token class_token import_token new_token public_token static_token void_token scanner_token nextint nextdouble else_token coma pyc punto pari pard llavei llaved
 
-%type <attr> S Import SecImp Class Main Tipo Bloque BDecl DVar DimSN Dimensiones LIdent Variable SeqInstr Instr Expr EConj ERel Esimple Term Factor Ref IfGuard WhileGuard
+%type <attr> Import SecImp Tipo BDecl DVar DimSN Dimensiones LIdent Variable Ref 
+%type <node> S Class Main
+%type <block> Bloque SeqInstr
+%type <stmt> Instr
+%type <expr> Expr EConj ERel Esimple Term Factor IfGuard WhileGuard
 
 %%
 
 S : Import Class {
-    cout << $1->codigo << $2->codigo;
+    rootAST = $2;
 }
 
 Import : Import import_token SecImp pyc {
@@ -144,8 +158,7 @@ Class : public_token class_token id llavei Main llaved {
 }
 
 Main : public_token static_token void_token main_token pari string_token cori cord id pard Bloque {
-    $$ = $11;
-    $$->codigo += "halt\n";
+    $$ = new ProgramNode($11);
 }
 
 Tipo : int_type { $$ = new Atributos(); $$->tipo = ENTERO; $$->tam = 1; }
@@ -155,16 +168,13 @@ Tipo : int_type { $$ = new Atributos(); $$->tipo = ENTERO; $$->tam = 1; }
 Bloque : llavei {
     ts = new TablaSimbolos(ts);
 } BDecl SeqInstr llaved {
-    $$ = new Atributos();
-    $$->codigo = $3->codigo + $4->codigo;
-    TablaSimbolos *old = ts;
+    $$ = $4;
+    $$->symbols = ts;
     ts = ts->getParent();
-    delete old;
 }
 
 BDecl : BDecl DVar {
     $$ = $1;
-    $$->codigo += $2->codigo;
 }
 | {
     $$ = new Atributos();
@@ -174,418 +184,142 @@ DVar : Tipo { current_type = $1->tipo; } LIdent pyc {
     $$ = $3;
 }
 | Tipo DimSN id asig new_token Tipo Dimensiones pyc {
-    if (ts->get($3->lexema)) {
-        msgError(ERR_YADECL, $3->nlin, $3->ncol, $3->lexema.c_str());
-    }
-    if ($1->tipo != $6->tipo) {
-        msgError(ERR_TIPOSDECLARRAY, $3->nlin, $3->ncol, $3->lexema.c_str());
-    }
-    if ($2->ndims != $7->ndims) {
-        msgError(ERR_DIMSDECLARRAY, $3->nlin, $3->ncol, $3->lexema.c_str());
-    }
-
-    unsigned tbase = $1->tipo;
-    unsigned total_tam = 1;
-    for (int i = 0; i < $7->ndims; i++) {
-        total_tam *= $7->dims[i];
-    }
-
-    unsigned tipo_id = tbase;
-    for (int i = $7->ndims - 1; i >= 0; i--) {
-        tipo_id = tt.nuevoTipoArray($7->dims[i], tipo_id);
-    }
-
     Simbolo s;
     s.nombre = $3->lexema;
-    s.tipo = tipo_id;
+    s.tipo = $1->tipo;
     s.dir = next_dir;
-    s.tam = total_tam;
-
-    if (next_dir + total_tam > 16000) {
-        msgError(ERR_NOCABE, $3->nlin, $3->ncol, $3->lexema.c_str());
-    }
-
     ts->set(s);
-    next_dir += total_tam;
+    next_dir++;
     $$ = new Atributos();
 }
 | scanner_token id asig new_token scanner_token pari system_token punto in_token pard pyc {
     Simbolo s;
     s.nombre = $2->lexema;
     s.tipo = SCVAR;
-    s.dir = 0;
-    s.tam = 0;
-    if (!ts->set(s)) {
-        msgError(ERR_YADECL, $2->nlin, $2->ncol, $2->lexema.c_str());
-    }
+    ts->set(s);
     $$ = new Atributos();
 }
 
-DimSN : DimSN cori cord {
-    $$ = $1;
-    $$->ndims++;
-}
-| cori cord {
-    $$ = new Atributos();
-    $$->ndims = 1;
-}
+DimSN : DimSN cori cord { $$ = $1; }
+| cori cord { $$ = new Atributos(); }
 
-Dimensiones : cori nentero cord Dimensiones {
-    int val = atoi($2->lexema.c_str());
-    if (val <= 0) {
-        msgError(ERR_DIM, $2->nlin, $2->ncol, $2->lexema.c_str());
-    }
-    $$ = $4;
-    $$->ndims++;
-    $$->dims.insert($$->dims.begin(), val);
-}
-| cori nentero cord {
-    int val = atoi($2->lexema.c_str());
-    if (val <= 0) {
-        msgError(ERR_DIM, $2->nlin, $2->ncol, $2->lexema.c_str());
-    }
-    $$ = new Atributos();
-    $$->ndims = 1;
-    $$->dims.push_back(val);
-}
+Dimensiones : cori nentero cord Dimensiones { $$ = $4; }
+| cori nentero cord { $$ = new Atributos(); }
 
-LIdent : LIdent coma Variable {
-    $$ = $1;
-    $$->codigo += $3->codigo;
-}
-| Variable {
-    $$ = $1;
-}
+LIdent : LIdent coma Variable { $$ = $1; }
+| Variable { $$ = $1; }
 
 Variable : id {
     Simbolo s;
     s.nombre = $1->lexema;
     s.tipo = current_type;
     s.dir = next_dir;
-    s.tam = 1;
-    if (next_dir + 1 > 16000) {
-        msgError(ERR_NOCABE, $1->nlin, $1->ncol, $1->lexema.c_str());
-    }
-    if (!ts->set(s)) {
-        msgError(ERR_YADECL, $1->nlin, $1->ncol, $1->lexema.c_str());
-    }
+    ts->set(s);
     next_dir++;
     $$ = new Atributos();
 }
 
 SeqInstr : SeqInstr Instr {
+    if ($2) $1->add($2);
     $$ = $1;
-    $$->codigo += $2->codigo;
 }
 | {
-    $$ = new Atributos();
+    $$ = new BlockNode(nlin, ncol);
 }
 
-Instr : pyc { $$ = new Atributos(); }
+Instr : pyc { $$ = nullptr; }
 | Bloque { $$ = $1; }
-| Ref asig {
-    $<attr>$ = new Atributos();
-    $<attr>$->dir = ($1->ref == "@A") ? getTemp() : -1;
-} Expr pyc {
-    int tmp_addr = $<attr>3->dir;
-    $$ = new Atributos();
-    if ($1->tipo == SCVAR || $4->tipo == SCVAR) {
-        msgError(ERR_SCVAR, $1->nlin, $1->ncol, "");
-    }
-    if (tt.tipos[$1->tipo].clase == TIPOARRAY) {
-        msgError(ERR_FALTAN, $1->nlin, $1->ncol, "");
-    }
-    $$->codigo = $1->codigo;
-    if ($1->ref == "@A") {
-        $$->codigo += "mov A " + to_string(tmp_addr) + "\n";
-        $$->codigo += $4->codigo;
-        if ($1->tipo == REAL && $4->tipo == ENTERO) {
-            $$->codigo += "itor\n";
-        } else if ($1->tipo != $4->tipo) {
-            msgError(ERR_TIPOSASIG, $2->nlin, $2->ncol, "");
-        }
-        $$->codigo += "mov " + to_string(tmp_addr) + " B\n";
-        $$->codigo += "mov A @B+0\n";
-        releaseTemp();
-    } else {
-        $$->codigo += $4->codigo;
-        if ($1->tipo == REAL && $4->tipo == ENTERO) {
-            $$->codigo += "itor\n";
-        } else if ($1->tipo != $4->tipo) {
-            msgError(ERR_TIPOSASIG, $2->nlin, $2->ncol, "");
-        }
-        $$->codigo += "mov A " + $1->ref + "\n";
-    }
+| Ref asig Expr pyc {
+    $$ = new AssignNode(new IdentifierNode($1->lexema, $1->nlin, $1->ncol), $3, $2->nlin, $2->ncol);
 }
 | system_token punto out_token punto println_token pari Expr pard pyc {
-    $$ = new Atributos();
-    $$->codigo = $7->codigo;
-    if ($7->tipo == REAL) {
-        $$->codigo += "wrr A\n";
-    } else {
-        $$->codigo += "wri A\n";
-    }
-    $$->codigo += "wrl\n";
+    $$ = nullptr; 
 }
 | system_token punto out_token punto print_token pari Expr pard pyc {
-    $$ = new Atributos();
-    $$->codigo = $7->codigo;
-    if ($7->tipo == REAL) {
-        $$->codigo += "wrr A\n";
-    } else {
-        $$->codigo += "wri A\n";
-    }
+    $$ = nullptr;
 }
 | IfGuard Instr {
-    $$ = new Atributos();
-    string label = newLabel();
-    $$->codigo = $1->codigo + "jz " + label + "\n" + $2->codigo + label + "\n";
+    $$ = new IfNode($1, $2, nullptr, $1->line, $1->column);
 }
 | IfGuard Instr else_token Instr {
-    $$ = new Atributos();
-    string label_else = newLabel();
-    string label_end = newLabel();
-    $$->codigo = $1->codigo + "jz " + label_else + "\n" + $2->codigo + "jmp " + label_end + "\n" + label_else + "\n" + $4->codigo + label_end + "\n";
+    $$ = new IfNode($1, $2, $4, $1->line, $1->column);
 }
 | WhileGuard Instr {
-    $$ = new Atributos();
-    string label_start = newLabel();
-    string label_end = newLabel();
-    $$->codigo = label_start + "\n" + $1->codigo + "jz " + label_end + "\n" + $2->codigo + "jmp " + label_start + "\n" + label_end + "\n";
+    $$ = new WhileNode($1, $2, $1->line, $1->column);
 }
 
 Expr : Expr or_token EConj {
-    if ($1->tipo != LOGICO || $3->tipo != LOGICO) msgError(ERR_OPNOBOOL, $2->nlin, $2->ncol, "||");
-    $$ = new Atributos();
-    unsigned pre = next_tmp;
-    unsigned tmp = getSafeTmp($1->max_tmp_used);
-    $$->codigo = $3->codigo + "mov A " + to_string(tmp) + "\n" + $1->codigo + "ori " + to_string(tmp) + "\n";
-    $$->tipo = LOGICO;
-    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
-    next_tmp = pre;
+    $$ = new BinaryExprNode("||", $1, $3, $2->nlin, $2->ncol);
 }
-| EConj { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
+| EConj { $$ = $1; }
 
 EConj : EConj and_token ERel {
-    if ($1->tipo != LOGICO || $3->tipo != LOGICO) msgError(ERR_OPNOBOOL, $2->nlin, $2->ncol, "&&");
-    $$ = new Atributos();
-    unsigned pre = next_tmp;
-    unsigned tmp = getSafeTmp($1->max_tmp_used);
-    $$->codigo = $3->codigo + "mov A " + to_string(tmp) + "\n" + $1->codigo + "andi " + to_string(tmp) + "\n";
-    $$->tipo = LOGICO;
-    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
-    next_tmp = pre;
+    $$ = new BinaryExprNode("&&", $1, $3, $2->nlin, $2->ncol);
 }
-| ERel { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
+| ERel { $$ = $1; }
 
 ERel : Esimple relop Esimple {
-    $$ = new Atributos();
-    unsigned pre = next_tmp;
-    unsigned tmp = getSafeTmp($1->max_tmp_used);
-    $$->codigo = $3->codigo;
-    if ($1->tipo == REAL && $3->tipo == ENTERO) $$->codigo += "itor\n";
-    $$->codigo += "mov A " + to_string(tmp) + "\n";
-    $$->codigo += $1->codigo;
-    if ($1->tipo == ENTERO && $3->tipo == REAL) $$->codigo += "itor\n";
-
-    if (($1->tipo == LOGICO && $3->tipo == LOGICO) || (($1->tipo == ENTERO || $1->tipo == REAL) && ($3->tipo == ENTERO || $3->tipo == REAL))) {
-        if ($1->tipo == REAL || $3->tipo == REAL) {
-            if ($2->lexema == "==") $$->codigo += "eqlr " + to_string(tmp) + "\n";
-            else if ($2->lexema == "!=") $$->codigo += "neqr " + to_string(tmp) + "\n";
-            else if ($2->lexema == "<") $$->codigo += "lssr " + to_string(tmp) + "\n";
-            else if ($2->lexema == "<=") $$->codigo += "leqr " + to_string(tmp) + "\n";
-            else if ($2->lexema == ">") $$->codigo += "gtrr " + to_string(tmp) + "\n";
-            else if ($2->lexema == ">=") $$->codigo += "geqr " + to_string(tmp) + "\n";
-        } else {
-            if ($2->lexema == "==") $$->codigo += "eqli " + to_string(tmp) + "\n";
-            else if ($2->lexema == "!=") $$->codigo += "neqi " + to_string(tmp) + "\n";
-            else if ($2->lexema == "<") $$->codigo += "lssi " + to_string(tmp) + "\n";
-            else if ($2->lexema == "<=") $$->codigo += "leqi " + to_string(tmp) + "\n";
-            else if ($2->lexema == ">") $$->codigo += "gtri " + to_string(tmp) + "\n";
-            else if ($2->lexema == ">=") $$->codigo += "geqi " + to_string(tmp) + "\n";
-        }
-    } else {
-        msgError(ERR_TIPOS, $2->nlin, $2->ncol, $2->lexema.c_str());
-    }
-    $$->tipo = LOGICO;
-    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
-    next_tmp = pre;
+    $$ = new BinaryExprNode($2->lexema, $1, $3, $2->nlin, $2->ncol);
 }
-| Esimple { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
+| Esimple { $$ = $1; }
 
 Esimple : Esimple addop Term {
-    $$ = new Atributos();
-    unsigned pre = next_tmp;
-    unsigned tmp = getSafeTmp($1->max_tmp_used);
-    $$->codigo = $3->codigo;
-    if ($1->tipo == REAL && $3->tipo == ENTERO) $$->codigo += "itor\n";
-    $$->codigo += "mov A " + to_string(tmp) + "\n";
-    $$->codigo += $1->codigo;
-    if ($1->tipo == ENTERO && $3->tipo == REAL) $$->codigo += "itor\n";
-
-    if ($1->tipo == REAL || $3->tipo == REAL) {
-        if ($2->lexema == "+") $$->codigo += "addr " + to_string(tmp) + "\n";
-        else $$->codigo += "subr " + to_string(tmp) + "\n";
-        $$->tipo = REAL;
-    } else if ($1->tipo == ENTERO && $3->tipo == ENTERO) {
-        if ($2->lexema == "+") $$->codigo += "addi " + to_string(tmp) + "\n";
-        else $$->codigo += "subi " + to_string(tmp) + "\n";
-        $$->tipo = ENTERO;
-    } else {
-        msgError(ERR_NUM, $2->nlin, $2->ncol, $2->lexema.c_str());
-    }
-    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
-    next_tmp = pre;
+    $$ = new BinaryExprNode($2->lexema, $1, $3, $2->nlin, $2->ncol);
 }
-| Term { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
+| Term { $$ = $1; }
 
 Term : Term mulop Factor {
-    $$ = new Atributos();
-    unsigned pre = next_tmp;
-    unsigned tmp = getSafeTmp($1->max_tmp_used);
-    $$->codigo = $3->codigo;
-    if ($1->tipo == REAL && $3->tipo == ENTERO) $$->codigo += "itor\n";
-    $$->codigo += "mov A " + to_string(tmp) + "\n";
-    $$->codigo += $1->codigo;
-    if ($1->tipo == ENTERO && $3->tipo == REAL) $$->codigo += "itor\n";
+    $$ = new BinaryExprNode($2->lexema, $1, $3, $2->nlin, $2->ncol);
+}
+| Factor { $$ = $1; }
 
-    if ($1->tipo == REAL || $3->tipo == REAL) {
-        if ($2->lexema == "*") $$->codigo += "mulr " + to_string(tmp) + "\n";
-        else $$->codigo += "divr " + to_string(tmp) + "\n";
-        $$->tipo = REAL;
-    } else if ($1->tipo == ENTERO && $3->tipo == ENTERO) {
-        if ($2->lexema == "*") $$->codigo += "muli " + to_string(tmp) + "\n";
-        else $$->codigo += "divi " + to_string(tmp) + "\n";
-        $$->tipo = ENTERO;
-    } else {
-        msgError(ERR_NUM, $2->nlin, $2->ncol, $2->lexema.c_str());
-    }
-    $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
-    next_tmp = pre;
+Factor : pari Expr pard {
+    $$ = $2;
 }
-| Factor { $$ = $1; $$->max_tmp_used = $1->max_tmp_used; }
-
-Factor : Ref {
-    if (tt.tipos[$1->tipo].clase == TIPOARRAY) {
-        msgError(ERR_FALTAN, $1->nlin, $1->ncol, "");
-    }
-    $$ = new Atributos();
-    if ($1->ref == "@A") {
-        $$->codigo = $1->codigo + "mov @A A\n";
-    } else {
-        $$->codigo = $1->codigo + "mov " + $1->ref + " A\n";
-    }
-    $$->tipo = $1->tipo;
-    $$->max_tmp_used = $1->max_tmp_used;
-}
-| id punto nextint pari pard {
-    Simbolo *s = ts->get($1->lexema);
-    if (!s) msgError(ERR_NODECL, $1->nlin, $1->ncol, $1->lexema.c_str());
-    if (s->tipo != SCVAR) msgError(ERR_NOSC, $1->nlin, $1->ncol, $1->lexema.c_str());
-    $$ = new Atributos();
-    $$->codigo = "rdi A\n";
-    $$->tipo = ENTERO;
-}
-| id punto nextdouble pari pard {
-    Simbolo *s = ts->get($1->lexema);
-    if (!s) msgError(ERR_NODECL, $1->nlin, $1->ncol, $1->lexema.c_str());
-    if (s->tipo != SCVAR) msgError(ERR_NOSC, $1->nlin, $1->ncol, $1->lexema.c_str());
-    $$ = new Atributos();
-    $$->codigo = "rdr A\n";
-    $$->tipo = REAL;
+| id {
+    $$ = new IdentifierNode($1->lexema, $1->nlin, $1->ncol);
 }
 | nentero {
-    $$ = new Atributos();
-    $$->codigo = "mov #" + $1->lexema + " A\n";
-    $$->tipo = ENTERO;
+    $$ = new IntLiteralNode(atoi($1->lexema.c_str()), $1->nlin, $1->ncol);
 }
 | nreal {
-    $$ = new Atributos();
-    $$->codigo = "mov $" + $1->lexema + " A\n";
-    $$->tipo = REAL;
+    $$ = new FloatLiteralNode(atof($1->lexema.c_str()), $1->nlin, $1->ncol);
 }
 | ctebool {
-    $$ = new Atributos();
-    if ($1->lexema == "true") $$->codigo = "mov #1 A\n";
-    else $$->codigo = "mov #0 A\n";
-    $$->tipo = LOGICO;
+    $$ = new BoolLiteralNode(($1->lexema == "true"), $1->nlin, $1->ncol);
 }
-| pari Expr pard { $$ = $2; $$->max_tmp_used = $2->max_tmp_used; }
+| Ref {
+    $$ = new IdentifierNode($1->lexema, $1->nlin, $1->ncol);
+}
 | not_token Factor {
-    if ($2->tipo != LOGICO) msgError(ERR_OPNOBOOL, $1->nlin, $1->ncol, "!");
-    $$ = new Atributos();
-    $$->codigo = $2->codigo + "noti\n";
-    $$->tipo = LOGICO;
-    $$->max_tmp_used = $2->max_tmp_used;
+    $$ = $2; 
 }
-| pari Tipo pard Factor {
-    $$ = new Atributos();
-    $$->codigo = $4->codigo;
-    if ($2->tipo == REAL && $4->tipo == ENTERO) $$->codigo += "itor\n";
-    else if ($2->tipo == ENTERO && $4->tipo == REAL) $$->codigo += "rtoi\n";
-    else if ($2->tipo == LOGICO && $4->tipo == ENTERO) $$->codigo += "noti\nnoti\n";
-    $$->tipo = $2->tipo;
-    $$->max_tmp_used = $4->max_tmp_used;
+| id punto nextint pari pard {
+    $$ = new IntLiteralNode(0, $1->nlin, $1->ncol);
+}
+| id punto nextdouble pari pard {
+    $$ = new FloatLiteralNode(0.0, $1->nlin, $1->ncol);
 }
 
 Ref : id {
-    Simbolo *s = ts->get($1->lexema);
-    if (!s) msgError(ERR_NODECL, $1->nlin, $1->ncol, $1->lexema.c_str());
-    if (s->tipo == SCVAR) msgError(ERR_SCVAR, $1->nlin, $1->ncol, $1->lexema.c_str());
-
-    $$ = new Atributos();
-    $$->ref = to_string(s->dir);
-    $$->tipo = s->tipo;
-    $$->codigo = "";
-    $$->nlin = $1->nlin;
-    $$->ncol = $1->ncol;
+    $$ = $1;
 }
 | Ref cori Esimple cord {
-    if (tt.tipos[$1->tipo].clase != TIPOARRAY) msgError(ERR_SOBRAN, $2->nlin, $2->ncol, "");
-    if ($3->tipo != ENTERO) msgError(ERR_INDICE_ENTERO, $2->nlin, $2->ncol, "");
-    
-    $$ = new Atributos();
-    unsigned tbase = tt.tipos[$1->tipo].tipoBase;
-    unsigned tam_base = 1;
-    unsigned t = tbase;
-    while (tt.tipos[t].clase == TIPOARRAY) {
-        tam_base *= tt.tipos[t].tamano;
-        t = tt.tipos[t].tipoBase;
-    }
-    
-    $$->codigo = $1->codigo;
-    if ($1->ref == "@A") {
-        unsigned pre = next_tmp;
-        unsigned tmp = getSafeTmp($3->max_tmp_used);
-        $$->codigo += "mov A " + to_string(tmp) + "\n";
-        $$->codigo += $3->codigo;
-        if (tam_base > 1) $$->codigo += "muli #" + to_string(tam_base) + "\n";
-        $$->codigo += "addi " + to_string(tmp) + "\n";
-        $$->max_tmp_used = max(max($1->max_tmp_used, $3->max_tmp_used), (int)tmp);
-        next_tmp = pre;
-    } else {
-        $$->codigo += $3->codigo;
-        if (tam_base > 1) $$->codigo += "muli #" + to_string(tam_base) + "\n";
-        $$->codigo += "addi #" + $1->ref + "\n";
-        $$->max_tmp_used = max($1->max_tmp_used, $3->max_tmp_used);
-    }
-    $$->ref = "@A";
-    $$->tipo = tbase;
-    $$->nlin = $4->nlin;
-    $$->ncol = $4->ncol;
+    $$ = $1;
 }
 
 IfGuard : if_token pari Expr pard {
-    if ($3->tipo != LOGICO) msgError(ERR_TIPOSIFW, $1->nlin, $1->ncol, "");
     $$ = $3;
 }
 
 WhileGuard : while_token pari Expr pard {
-    if ($3->tipo != LOGICO) msgError(ERR_TIPOSIFW, $1->nlin, $1->ncol, "");
     $$ = $3;
 }
 
 %%
+
+#include "ASTVisualizer.h"
+#include "SemanticVisitor.h"
 
 int main(int argc, char *argv[]) {
     if (argc > 1) {
@@ -595,6 +329,16 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
     }
-    yyparse();
+    if (yyparse() == 0 && rootAST) {
+        SemanticVisitor semantic(ts, &tt);
+        rootAST->accept(&semantic);
+        
+        if (semantic.success()) {
+            ASTVisualizer visualizer;
+            rootAST->accept(&visualizer);
+        } else {
+            std::cerr << "Compilation failed due to semantic errors." << std::endl;
+        }
+    }
     return 0;
 }
