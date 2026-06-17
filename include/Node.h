@@ -25,7 +25,8 @@ public:
 class ExprNode : public Node {
 public:
     int type; // From TablaTipos
-    using Node::Node;
+    int dir;  // Memory address/offset
+    ExprNode(int l = 0, int c = 0) : Node(l, c), type(-1), dir(-1) {}
 };
 
 #endif

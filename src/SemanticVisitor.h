@@ -26,7 +26,7 @@ public:
     void visit(BlockNode* node) override {
         TablaSimbolos* oldTS = currentTS;
         if (node->symbols) currentTS = node->symbols;
-        for (auto s : node->statements) if (s) s->accept(this);
+        for (const auto& s : node->statements) if (s) s->accept(this);
         currentTS = oldTS;
     }
 
@@ -41,6 +41,13 @@ public:
                     error(node->line, node->column, "Incompatible types in assignment");
                 }
             }
+        }
+    }
+
+    void visit(PrintNode* node) override {
+        node->expr->accept(this);
+        if (node->expr->type == LOGICO) {
+            error(node->line, node->column, "Cannot print boolean expressions");
         }
     }
 
@@ -96,7 +103,10 @@ public:
     void visit(IdentifierNode* node) override {
         Simbolo* s = currentTS->get(node->name);
         if (!s) { error(node->line, node->column, "Identifier '" + node->name + "' not declared"); node->type = -1; }
-        else node->type = s->tipo;
+        else {
+            node->type = s->tipo;
+            node->dir = s->dir;
+        }
     }
 
     void visit(IntLiteralNode* node) override { node->type = ENTERO; }

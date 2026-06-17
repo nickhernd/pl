@@ -16,6 +16,7 @@ class AssignNode;
 class IfNode;
 class WhileNode;
 class BlockNode;
+class PrintNode;
 
 class Visitor {
 public:
@@ -23,6 +24,7 @@ public:
     virtual void visit(ProgramNode* node) = 0;
     virtual void visit(BlockNode* node) = 0;
     virtual void visit(AssignNode* node) = 0;
+    virtual void visit(PrintNode* node) = 0;
     virtual void visit(IfNode* node) = 0;
     virtual void visit(WhileNode* node) = 0;
     virtual void visit(BinaryExprNode* node) = 0;

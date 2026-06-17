@@ -872,7 +872,7 @@ YY_RULE_SETUP
 case 5:
 YY_RULE_SETUP
 #line 46 "src/lexer.l"
-{ RET(system_token); }
+{ RET_ATTR(system_token); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP

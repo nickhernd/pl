@@ -127,8 +127,8 @@ unsigned getSafeTmp(int above) {
     BlockNode *block;
 }
 
-%token <attr> id nentero nreal relop addop mulop ctebool asig cori cord and_token or_token not_token if_token while_token
-%token boolean int_type double_type main_token system_token out_token in_token print_token println_token string_token class_token import_token new_token public_token static_token void_token scanner_token nextint nextdouble else_token coma pyc punto pari pard llavei llaved
+%token <attr> id nentero nreal relop addop mulop ctebool asig cori cord and_token or_token not_token if_token while_token system_token
+%token boolean int_type double_type main_token out_token in_token print_token println_token string_token class_token import_token new_token public_token static_token void_token scanner_token nextint nextdouble else_token coma pyc punto pari pard llavei llaved
 
 %type <attr> Import SecImp Tipo BDecl DVar DimSN Dimensiones LIdent Variable Ref 
 %type <node> S Class Main
@@ -233,10 +233,10 @@ Instr : pyc { $$ = nullptr; }
     $$ = new AssignNode(new IdentifierNode($1->lexema, $1->nlin, $1->ncol), $3, $2->nlin, $2->ncol);
 }
 | system_token punto out_token punto println_token pari Expr pard pyc {
-    $$ = nullptr; 
+    $$ = new PrintNode($7, true, $1->nlin, $1->ncol); 
 }
 | system_token punto out_token punto print_token pari Expr pard pyc {
-    $$ = nullptr;
+    $$ = new PrintNode($7, false, $1->nlin, $1->ncol);
 }
 | IfGuard Instr {
     $$ = new IfNode($1, $2, nullptr, $1->line, $1->column);
@@ -292,7 +292,10 @@ Factor : pari Expr pard {
     $$ = new IdentifierNode($1->lexema, $1->nlin, $1->ncol);
 }
 | not_token Factor {
-    $$ = $2; 
+    $$ = new UnaryExprNode($1->lexema, $2, $1->nlin, $1->ncol); 
+}
+| addop Factor {
+    $$ = new UnaryExprNode($1->lexema, $2, $1->nlin, $1->ncol);
 }
 | id punto nextint pari pard {
     $$ = new IntLiteralNode(0, $1->nlin, $1->ncol);
@@ -319,6 +322,8 @@ WhileGuard : while_token pari Expr pard {
 %%
 
 #include "ASTVisualizer.h"
+#include "DOTVisualizer.h"
+#include "CodeGenerator.h"
 #include "SemanticVisitor.h"
 
 int main(int argc, char *argv[]) {
@@ -334,11 +339,12 @@ int main(int argc, char *argv[]) {
         rootAST->accept(&semantic);
         
         if (semantic.success()) {
-            ASTVisualizer visualizer;
-            rootAST->accept(&visualizer);
+            CodeGenerator gen;
+            gen.generate(rootAST, 4096);
         } else {
             std::cerr << "Compilation failed due to semantic errors." << std::endl;
         }
+        delete rootAST;
     }
     return 0;
 }

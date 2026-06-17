@@ -76,11 +76,11 @@ extern int yydebug;
     not_token = 270,               /* not_token  */
     if_token = 271,                /* if_token  */
     while_token = 272,             /* while_token  */
-    boolean = 273,                 /* boolean  */
-    int_type = 274,                /* int_type  */
-    double_type = 275,             /* double_type  */
-    main_token = 276,              /* main_token  */
-    system_token = 277,            /* system_token  */
+    system_token = 273,            /* system_token  */
+    boolean = 274,                 /* boolean  */
+    int_type = 275,                /* int_type  */
+    double_type = 276,             /* double_type  */
+    main_token = 277,              /* main_token  */
     out_token = 278,               /* out_token  */
     in_token = 279,                /* in_token  */
     print_token = 280,             /* print_token  */

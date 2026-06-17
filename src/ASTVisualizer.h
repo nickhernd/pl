@@ -23,7 +23,7 @@ public:
         printIndent();
         std::cout << "BlockNode (" << node->statements.size() << " statements)" << std::endl;
         indentLevel++;
-        for (auto s : node->statements) if (s) s->accept(this);
+        for (const auto& s : node->statements) if (s) s->accept(this);
         indentLevel--;
     }
 
@@ -33,6 +33,14 @@ public:
         indentLevel++;
         node->target->accept(this);
         node->value->accept(this);
+        indentLevel--;
+    }
+
+    void visit(PrintNode* node) override {
+        printIndent();
+        std::cout << (node->isPrintln ? "PrintlnNode" : "PrintNode") << std::endl;
+        indentLevel++;
+        node->expr->accept(this);
         indentLevel--;
     }
 
@@ -65,6 +73,13 @@ public:
         indentLevel++;
         node->left->accept(this);
         node->right->accept(this);
+        indentLevel--;
+    }
+
+    void visit(UnaryExprNode* node) override {
+        printIndent(); std::cout << "UnaryExprNode (" << node->op << ")" << std::endl;
+        indentLevel++;
+        node->expr->accept(this);
         indentLevel--;
     }
 

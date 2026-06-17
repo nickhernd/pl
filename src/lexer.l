@@ -43,7 +43,7 @@ void count(void) {
 "int"               { RET(int_type); }
 "double"            { RET(double_type); }
 "main"              { RET(main_token); }
-"System"            { RET(system_token); }
+"System"            { RET_ATTR(system_token); }
 "out"               { RET(out_token); }
 "in"                { RET(in_token); }
 "print"             { RET(print_token); }
