@@ -1,0 +1,10 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {chapter}{\numberline {1}Introducción}{2}{}%
+\contentsline {chapter}{\numberline {2}Arquitectura del Compilador}{3}{}%
+\contentsline {section}{\numberline {2.1}Análisis Léxico y Sintáctico}{3}{}%
+\contentsline {section}{\numberline {2.2}Análisis Semántico y Generación de Código}{3}{}%
+\contentsline {section}{\numberline {2.3}Máquina Virtual m2r}{4}{}%
+\contentsline {chapter}{\numberline {3}Manual de Usuario}{5}{}%
+\contentsline {section}{\numberline {3.1}Compilación}{5}{}%
+\contentsline {section}{\numberline {3.2}Ejecución}{5}{}%
+\contentsline {section}{\numberline {3.3}Depuración en la Máquina Virtual}{5}{}%
