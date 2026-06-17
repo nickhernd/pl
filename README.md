@@ -7,42 +7,44 @@ Este proyecto es una implementación de un compilador/traductor, desarrollado co
 
 ## Requisitos
 Para compilar y ejecutar este proyecto, necesitas tener instaladas las siguientes herramientas:
-- `make`
-- `g++` (o un compilador de C++ compatible)
-- `gcc`
-- `flex`
-- `bison`
+- `make`, `g++`, `gcc`, `flex`, `bison`
 
-## Instrucciones de Compilación
-El proyecto utiliza un Makefile para gestionar la compilación. Simplemente ejecuta el siguiente comando en la raíz del proyecto:
+## Flujo de Construcción y Operación
+
+### 1. Construcción (Build)
+El proyecto utiliza un Makefile para gestionar la compilación. Ejecuta en la raíz:
 
 ```bash
 make
 ```
 
-Esto generará los ejecutables necesarios:
-- `compiler`
-- `m2r`
+**Proceso de construcción:**
+1.  **Generación:** `flex` (`src/lexer.l`) y `bison` (`src/parser.y`) generan los archivos fuentes C (`lex.yy.c`, `parser.tab.c`, `parser.tab.h`).
+2.  **Compilación:** Se compilan los archivos fuente C/C++ (`src/`, `include/`) generando archivos objeto en `obj/`.
+3.  **Enlazado:** Se crean dos ejecutables:
+    - `compiler`: El compilador principal.
+    - `m2r`: El intérprete/VM para el lenguaje.
 
-Para limpiar los archivos generados y los objetos, puedes ejecutar:
+### 2. Flujo de Operación
+Para procesar un programa fuente:
+1.  **Compilación:** El `compiler` toma el archivo fuente y genera un archivo intermedio (ej. `output.asm`).
+    ```bash
+    ./compiler tests/inputs/p01.txt
+    ```
+2.  **Ejecución:** El intérprete `m2r` ejecuta el código generado:
+    ```bash
+    ./m2r output.asm
+    ```
 
+## Estructura del Proyecto
+- `src/`: Código fuente (`lexer.l`, `parser.y`, implementaciones C/C++).
+- `include/`: Archivos de cabecera (`.h`).
+- `obj/`: Archivos objeto.
+- `tests/`: Casos de prueba.
+- `docs/`: Documentación técnica.
+
+## Limpieza
+Para limpiar archivos generados:
 ```bash
 make clean
 ```
-
-## Estructura del Proyecto
-- `src/`: Contiene el código fuente del compilador (`lexer.l`, `parser.y`, implementaciones en C++).
-- `include/`: Contiene los archivos de cabecera (`.h`).
-- `obj/`: Directorio donde se almacenan los archivos objeto durante la compilación.
-- `tests/`: Contiene los casos de prueba (entradas y resultados esperados).
-- `docs/`: Documentación adicional sobre el diseño y requisitos del proyecto.
-
-## Uso
-Una vez compilado, puedes usar los ejecutables para procesar tus archivos fuente (ej. los archivos en `tests/inputs/`).
-
-```bash
-./compiler < tests/inputs/p01.txt
-```
-
----
-*Nota: Si encuentras problemas, revisa los issues en el repositorio de GitHub.*

@@ -1,0 +1,24 @@
+La arquitectura del sistema sigue el modelo clásico de compilación y ejecución de programas.
+
+\section{Análisis Léxico y Sintáctico}
+El compilador utiliza \textit{Flex} y \textit{Bison} para la generación automática de los analizadores:
+\begin{itemize}
+    \item \textbf{Flex (src/lexer.l):} Define los patrones léxicos del lenguaje (tokens). Convierte el flujo de caracteres de entrada en una secuencia de tokens.
+    \item \textbf{Bison (src/parser.y):} Define la gramática libre de contexto del lenguaje. Construye un Árbol de Sintaxis Abstracta (AST) que representa la estructura jerárquica del programa.
+\end{itemize}
+
+\section{Análisis Semántico y Generación de Código}
+Una vez construido el AST, el compilador realiza:
+\begin{enumerate}
+    \item \textbf{Tabla de Símbolos (src/TablaSimbolos.cc):} Gestiona el ámbito y el tipo de los identificadores declarados.
+    \item \textbf{Tabla de Tipos (src/TablaTipos.cc):} Verifica la consistencia de los tipos en las expresiones (verificación de tipos).
+    \item \textbf{Generador de Código:} Recorre el AST para emitir las instrucciones de bajo nivel compatibles con la VM \textit{m2r}.
+\end{enumerate}
+
+\section{Máquina Virtual m2r}
+El intérprete (\texttt{m2r.c}) emula una arquitectura basada en:
+\begin{itemize}
+    \item \textbf{Memoria:} Un array de estructuras \texttt{MEMO} que almacenan enteros o reales.
+    \item \textbf{Registros:} Acumulador y Registro Base.
+    \item \textbf{Ciclo de Instrucción:} \textit{Fetch-Decode-Execute}. Lee la instrucción en el PC (Program Counter), decodifica la operación y sus operandos, y ejecuta la acción correspondiente (aritmética, saltos, E/S).
+\end{itemize}

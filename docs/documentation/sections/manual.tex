@@ -1,0 +1,33 @@
+Este manual proporciona las instrucciones necesarias para compilar, ejecutar y depurar programas utilizando el sistema \textit{m2r}.
+
+\section{Compilación}
+Para compilar el proyecto, asegúrese de tener \texttt{make}, \texttt{gcc}, \texttt{g++}, \texttt{flex} y \texttt{bison} instalados. En la raíz del proyecto, ejecute:
+\begin{lstlisting}[language=bash]
+make
+\end{lstlisting}
+Esto generará los ejecutables \texttt{compiler} y \texttt{m2r}.
+
+\section{Ejecución}
+El proceso de ejecución se realiza en dos etapas:
+\begin{enumerate}
+    \item \textbf{Compilación del código fuente:}
+    \begin{lstlisting}[language=bash]
+./compiler <archivo_fuente.java>
+    \end{lstlisting}
+    Esto genera un archivo de código intermedio (normalmente \texttt{output.asm}).
+    
+    \item \textbf{Interpretación:}
+    \begin{lstlisting}[language=bash]
+./m2r output.asm
+    \end{lstlisting}
+\end{enumerate}
+
+\section{Depuración en la Máquina Virtual}
+El intérprete \texttt{m2r} incluye un depurador básico. Para activarlo (suponiendo que la implementación lo permita mediante banderas o configuraciones), se pueden utilizar comandos interactivos durante la ejecución para:
+\begin{itemize}
+    \item Listar instrucciones.
+    \item Establecer puntos de ruptura (\textit{breakpoints}).
+    \item Inspeccionar el contenido de la memoria y registros (Acumulador, Base).
+    \item Ejecutar paso a paso (\textit{step-by-step}).
+\end{itemize}
+\textit{Consulte el código fuente de \texttt{src/m2r.c} para conocer los comandos específicos de depuración soportados.}
