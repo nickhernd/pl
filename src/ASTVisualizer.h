@@ -27,6 +27,14 @@ public:
         indentLevel--;
     }
 
+    void visit(MethodNode* node) override {
+        printIndent();
+        std::cout << "MethodNode: " << node->name << " (return type: " << node->returnType << ")" << std::endl;
+        indentLevel++;
+        if (node->body) node->body->accept(this);
+        indentLevel--;
+    }
+
     void visit(AssignNode* node) override {
         printIndent();
         std::cout << "AssignNode" << std::endl;
@@ -41,6 +49,14 @@ public:
         std::cout << (node->isPrintln ? "PrintlnNode" : "PrintNode") << std::endl;
         indentLevel++;
         node->expr->accept(this);
+        indentLevel--;
+    }
+
+    void visit(ReturnNode* node) override {
+        printIndent();
+        std::cout << "ReturnNode" << std::endl;
+        indentLevel++;
+        if (node->expr) node->expr->accept(this);
         indentLevel--;
     }
 

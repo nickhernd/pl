@@ -109,6 +109,24 @@ public:
     void accept(Visitor* v) override { v->visit(this); }
 };
 
+class ReturnNode : public StmtNode {
+public:
+    std::unique_ptr<ExprNode> expr;
+    ReturnNode(ExprNode* e, int l, int c)
+        : StmtNode(l, c), expr(e) {}
+    void accept(Visitor* v) override { v->visit(this); }
+};
+
+class MethodNode : public StmtNode {
+public:
+    std::string name;
+    int returnType;
+    std::unique_ptr<BlockNode> body;
+    MethodNode(const std::string& n, int rt, BlockNode* b, int l, int c)
+        : StmtNode(l, c), name(n), returnType(rt), body(b) {}
+    void accept(Visitor* v) override { v->visit(this); }
+};
+
 // Program Node
 class ProgramNode : public Node {
 public:

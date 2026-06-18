@@ -52,6 +52,16 @@ public:
         lastNode = current;
     }
 
+    void visit(MethodNode* node) override {
+        std::string current = newNode();
+        setLabel(current, "Method: " + node->name);
+        if (node->body) {
+            node->body->accept(this);
+            addEdge(current, lastNode);
+        }
+        lastNode = current;
+    }
+
     void visit(AssignNode* node) override {
         std::string current = newNode();
         setLabel(current, "Assign (=)");
@@ -67,6 +77,16 @@ public:
         setLabel(current, node->isPrintln ? "Println" : "Print");
         node->expr->accept(this);
         addEdge(current, lastNode);
+        lastNode = current;
+    }
+
+    void visit(ReturnNode* node) override {
+        std::string current = newNode();
+        setLabel(current, "Return");
+        if (node->expr) {
+            node->expr->accept(this);
+            addEdge(current, lastNode);
+        }
         lastNode = current;
     }
 

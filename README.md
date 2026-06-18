@@ -2,6 +2,11 @@
 
 Este proyecto es una implementación de un compilador/traductor, desarrollado con herramientas estándar de análisis léxico y sintáctico como Flex y Bison.
 
+## Nuevas Funcionalidades
+- **Manejo de Constantes**: Soporte para la palabra clave `final` y verificación de no reasignación.
+- **Funciones y Retornos**: Soporte para múltiples métodos estáticos y verificación semántica de sentencias `return`.
+- **Detección de Código Inalcanzable**: Identificación de sentencias que nunca se ejecutarán.
+
 ## Repositorio
 - URL: [https://github.com/nickhernd/pl](https://github.com/nickhernd/pl)
 
@@ -36,11 +41,19 @@ Para procesar un programa fuente:
     ./m2r output.asm
     ```
 
+### 3. Pruebas de Errores Semánticos
+Se han incluido 10 tests específicos para verificar los errores semánticos implementados. Puedes ejecutarlos con:
+
+```bash
+for f in tests/semantic_errors/*.java; do echo "Testing $f..."; ./compiler "$f"; echo "-----------------------------------"; done
+```
+
 ## Estructura del Proyecto
 - `src/`: Código fuente (`lexer.l`, `parser.y`, implementaciones C/C++).
 - `include/`: Archivos de cabecera (`.h`).
 - `obj/`: Archivos objeto.
 - `tests/`: Casos de prueba.
+    - `tests/semantic_errors/`: Casos de prueba para errores semánticos.
 - `docs/`: Documentación técnica.
 
 ## Limpieza

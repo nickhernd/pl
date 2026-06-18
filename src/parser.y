@@ -88,6 +88,7 @@ unsigned next_dir = 0;
 unsigned next_tmp = 16000;
 unsigned next_label = 1;
 int current_type;
+bool is_constant = false;
 
 string newLabel() {
     return "L" + to_string(next_label++);
@@ -127,13 +128,13 @@ unsigned getSafeTmp(int above) {
     BlockNode *block;
 }
 
-%token <attr> id nentero nreal relop addop mulop ctebool asig cori cord and_token or_token not_token if_token while_token system_token
-%token boolean int_type double_type main_token out_token in_token print_token println_token string_token class_token import_token new_token public_token static_token void_token scanner_token nextint nextdouble else_token coma pyc punto pari pard llavei llaved
+%token <attr> id nentero nreal relop addop mulop ctebool asig cori cord and_token or_token not_token if_token while_token system_token return_token final_token class_token public_token static_token void_token main_token
+%token boolean int_type double_type out_token in_token print_token println_token string_token import_token new_token scanner_token nextint nextdouble else_token coma pyc punto pari pard llavei llaved
 
 %type <attr> Import SecImp Tipo BDecl DVar DimSN Dimensiones LIdent Variable Ref 
-%type <node> S Class Main
-%type <block> Bloque SeqInstr
-%type <stmt> Instr
+%type <node> S Class
+%type <stmt> Main Method Member Instr
+%type <block> Bloque SeqInstr Members
 %type <expr> Expr EConj ERel Esimple Term Factor IfGuard WhileGuard
 
 %%
@@ -153,12 +154,43 @@ SecImp : SecImp punto id { $$ = $1; }
 | SecImp punto scanner_token { $$ = $1; }
 | id { $$ = new Atributos(); }
 
-Class : public_token class_token id llavei Main llaved {
-    $$ = $5;
+Class : public_token class_token id llavei Members llaved {
+    $$ = new ProgramNode($5);
 }
 
+Members : Members Member {
+    if ($2) $1->add($2);
+    $$ = $1;
+}
+| {
+    $$ = new BlockNode(nlin, ncol);
+}
+
+Member : Main { $$ = $1; }
+| Method { $$ = $1; }
+| DVar { $$ = nullptr; }
+
 Main : public_token static_token void_token main_token pari string_token cori cord id pard Bloque {
-    $$ = new ProgramNode($11);
+    $$ = new MethodNode("main", -1, $11, $1->nlin, $1->ncol);
+}
+
+Method : public_token static_token Tipo id pari pard Bloque {
+    Simbolo s;
+    s.nombre = $4->lexema;
+    s.tipo = $3->tipo;
+    s.isFunction = true;
+    s.returnType = $3->tipo;
+    ts->set(s);
+    $$ = new MethodNode($4->lexema, $3->tipo, $7, $4->nlin, $4->ncol);
+}
+| public_token static_token void_token id pari pard Bloque {
+    Simbolo s;
+    s.nombre = $4->lexema;
+    s.tipo = -1;
+    s.isFunction = true;
+    s.returnType = -1;
+    ts->set(s);
+    $$ = new MethodNode($4->lexema, -1, $7, $4->nlin, $4->ncol);
 }
 
 Tipo : int_type { $$ = new Atributos(); $$->tipo = ENTERO; $$->tam = 1; }
@@ -180,13 +212,17 @@ BDecl : BDecl DVar {
     $$ = new Atributos();
 }
 
-DVar : Tipo { current_type = $1->tipo; } LIdent pyc {
+DVar : Tipo { current_type = $1->tipo; is_constant = false; } LIdent pyc {
     $$ = $3;
+}
+| final_token Tipo { current_type = $2->tipo; is_constant = true; } LIdent pyc {
+    $$ = $4;
 }
 | Tipo DimSN id asig new_token Tipo Dimensiones pyc {
     Simbolo s;
     s.nombre = $3->lexema;
     s.tipo = $1->tipo;
+    s.isConstant = false;
     s.dir = next_dir;
     ts->set(s);
     next_dir++;
@@ -196,6 +232,7 @@ DVar : Tipo { current_type = $1->tipo; } LIdent pyc {
     Simbolo s;
     s.nombre = $2->lexema;
     s.tipo = SCVAR;
+    s.isConstant = false;
     ts->set(s);
     $$ = new Atributos();
 }
@@ -213,6 +250,7 @@ Variable : id {
     Simbolo s;
     s.nombre = $1->lexema;
     s.tipo = current_type;
+    s.isConstant = is_constant;
     s.dir = next_dir;
     ts->set(s);
     next_dir++;
@@ -246,6 +284,12 @@ Instr : pyc { $$ = nullptr; }
 }
 | WhileGuard Instr {
     $$ = new WhileNode($1, $2, $1->line, $1->column);
+}
+| return_token Expr pyc {
+    $$ = new ReturnNode($2, $1->nlin, $1->ncol);
+}
+| return_token pyc {
+    $$ = new ReturnNode(nullptr, $1->nlin, $1->ncol);
 }
 
 Expr : Expr or_token EConj {

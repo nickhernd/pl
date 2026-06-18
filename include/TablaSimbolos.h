@@ -18,6 +18,10 @@ struct Simbolo {
   unsigned tipo;
   unsigned dir;
   unsigned tam;
+  bool isConstant = false;
+  bool isAssigned = false;
+  bool isFunction = false;
+  int returnType = -1;
 };
 
 

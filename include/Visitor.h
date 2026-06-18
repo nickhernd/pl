@@ -17,14 +17,18 @@ class IfNode;
 class WhileNode;
 class BlockNode;
 class PrintNode;
+class ReturnNode;
+class MethodNode;
 
 class Visitor {
 public:
     virtual ~Visitor() {}
     virtual void visit(ProgramNode* node) = 0;
     virtual void visit(BlockNode* node) = 0;
+    virtual void visit(MethodNode* node) = 0;
     virtual void visit(AssignNode* node) = 0;
     virtual void visit(PrintNode* node) = 0;
+    virtual void visit(ReturnNode* node) = 0;
     virtual void visit(IfNode* node) = 0;
     virtual void visit(WhileNode* node) = 0;
     virtual void visit(BinaryExprNode* node) = 0;

@@ -43,17 +43,15 @@ public:
     }
 
     void visit(ProgramNode* node) override {
-        emitLabel("main");
+        if (node->root) node->root->accept(this);
+    }
+
+    void visit(MethodNode* node) override {
+        emitLabel(node->name);
         emit("pushq %rbp");
         emit("movq %rsp, %rbp");
-        
-        // Reserve space for variables (round up to 16-byte alignment)
-        // We'll calculate actual need or just use a safe buffer for now
-        // A better way is to pass next_dir here.
-        emit("subq $4096, %rsp"); 
-
-        if (node->root) node->root->accept(this);
-
+        emit("subq $4096, %rsp");
+        if (node->body) node->body->accept(this);
         emit("movq %rbp, %rsp");
         emit("popq %rbp");
         emit("ret");
@@ -138,6 +136,13 @@ public:
         emit("leaq format_int(%rip), %rdi");
         emit("movl $0, %eax"); // Number of vector registers used
         emit("call printf@PLT");
+    }
+
+    void visit(ReturnNode* node) override {
+        if (node->expr) node->expr->accept(this);
+        emit("movq %rbp, %rsp");
+        emit("popq %rbp");
+        emit("ret");
     }
 
     void visit(IfNode* node) override {

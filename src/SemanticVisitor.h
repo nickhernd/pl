@@ -10,6 +10,9 @@ class SemanticVisitor : public Visitor {
     TablaSimbolos* currentTS;
     TablaTipos* tt;
     bool hasErrors = false;
+    int currentReturnType = -1; // -1 for void
+    bool pathReturns = false;
+    bool unreachableReported = false;
 
     void error(int line, int col, const std::string& msg) {
         std::cerr << "Semantic Error (" << line << "," << col << "): " << msg << std::endl;
@@ -21,16 +24,72 @@ public:
 
     bool success() const { return !hasErrors; }
 
-    void visit(ProgramNode* node) override { if (node->root) node->root->accept(this); }
+    void visit(ProgramNode* node) override { 
+        if (node->root) node->root->accept(this); 
+    }
+
+    void visit(MethodNode* node) override {
+        int oldRT = currentReturnType;
+        bool oldPathReturns = pathReturns;
+        bool oldUnreachable = unreachableReported;
+        
+        currentReturnType = node->returnType;
+        pathReturns = false;
+        unreachableReported = false;
+        
+        if (node->body) node->body->accept(this);
+        
+        if (currentReturnType != -1 && !pathReturns) {
+            error(node->line, node->column, "Method '" + node->name + "' must return a value");
+        }
+        
+        currentReturnType = oldRT;
+        pathReturns = oldPathReturns;
+        unreachableReported = oldUnreachable;
+    }
 
     void visit(BlockNode* node) override {
         TablaSimbolos* oldTS = currentTS;
         if (node->symbols) currentTS = node->symbols;
-        for (const auto& s : node->statements) if (s) s->accept(this);
+        for (const auto& s : node->statements) {
+            if (s) {
+                if (pathReturns && !unreachableReported) {
+                    error(s->line, s->column, "Unreachable code detected");
+                    unreachableReported = true;
+                }
+                s->accept(this);
+            }
+        }
         currentTS = oldTS;
     }
 
+    void visit(ReturnNode* node) override {
+        if (node->expr) {
+            node->expr->accept(this);
+            if (currentReturnType == -1) {
+                error(node->line, node->column, "Void method cannot return a value");
+            } else if (node->expr->type != -1 && node->expr->type != currentReturnType) {
+                if (currentReturnType == REAL && node->expr->type == ENTERO) {
+                    // OK: Promotion
+                } else {
+                    error(node->line, node->column, "Return type mismatch");
+                }
+            }
+        } else {
+            if (currentReturnType != -1) {
+                error(node->line, node->column, "Method must return a value");
+            }
+        }
+        pathReturns = true;
+    }
+
     void visit(AssignNode* node) override {
+        Simbolo* s = currentTS->get(node->target->name);
+        if (s && s->isConstant && s->isAssigned) {
+            error(node->line, node->column, "Cannot reassign to constant variable '" + node->target->name + "'");
+        }
+        if (s) s->isAssigned = true;
+
         node->target->accept(this);
         node->value->accept(this);
         if (node->target->type != -1 && node->value->type != -1) {
@@ -56,8 +115,22 @@ public:
         if (node->condition->type != LOGICO && node->condition->type != -1) {
             error(node->condition->line, node->condition->column, "If condition must be boolean");
         }
+        
+        bool preIfReturns = pathReturns;
+        bool preIfUnreachable = unreachableReported;
+        
+        pathReturns = false;
+        unreachableReported = false;
         if (node->thenPart) node->thenPart->accept(this);
+        bool thenReturns = pathReturns;
+        
+        pathReturns = false;
+        unreachableReported = false;
         if (node->elsePart) node->elsePart->accept(this);
+        bool elseReturns = pathReturns;
+        
+        pathReturns = preIfReturns || (thenReturns && elseReturns);
+        unreachableReported = preIfUnreachable;
     }
 
     void visit(WhileNode* node) override {
@@ -65,7 +138,11 @@ public:
         if (node->condition->type != LOGICO && node->condition->type != -1) {
             error(node->condition->line, node->condition->column, "While condition must be boolean");
         }
+        bool oldPathReturns = pathReturns;
+        pathReturns = false;
         if (node->body) node->body->accept(this);
+        // While might not execute, so it doesn't guarantee return
+        pathReturns = oldPathReturns;
     }
 
     void visit(BinaryExprNode* node) override {
