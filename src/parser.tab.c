@@ -1669,6 +1669,8 @@ yyreduce:
   case 41: /* Instr: Ref asig Expr pyc  */
 #line 270 "src/parser.y"
                     {
+    // Necesitamos convertir Ref (Atributos) a un Nodo adecuado. 
+    // Como Ref es complicado, por ahora mantengamos la estructura, pero esto debe evolucionar.
     (yyval.stmt) = new AssignNode(new IdentifierNode((yyvsp[-3].attr)->lexema, (yyvsp[-3].attr)->nlin, (yyvsp[-3].attr)->ncol), (yyvsp[-1].expr), (yyvsp[-2].attr)->nlin, (yyvsp[-2].attr)->ncol);
 }
 #line 1675 "src/parser.tab.c"
@@ -1777,7 +1779,7 @@ yyreduce:
                              {
     (yyval.expr) = new BinaryExprNode((yyvsp[-1].attr)->lexema, (yyvsp[-2].expr), (yyvsp[0].expr), (yyvsp[-1].attr)->nlin, (yyvsp[-1].attr)->ncol);
 }
-#line 1781 "src/parser.tab.c"
+#line 1783 "src/parser.tab.c"
     break;
 
   case 56: /* Esimple: Term  */

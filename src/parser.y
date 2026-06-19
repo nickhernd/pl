@@ -268,6 +268,8 @@ SeqInstr : SeqInstr Instr {
 Instr : pyc { $$ = nullptr; }
 | Bloque { $$ = $1; }
 | Ref asig Expr pyc {
+    // Necesitamos convertir Ref (Atributos) a un Nodo adecuado. 
+    // Como Ref es complicado, por ahora mantengamos la estructura, pero esto debe evolucionar.
     $$ = new AssignNode(new IdentifierNode($1->lexema, $1->nlin, $1->ncol), $3, $2->nlin, $2->ncol);
 }
 | system_token punto out_token punto println_token pari Expr pard pyc {
