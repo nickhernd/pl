@@ -94,6 +94,9 @@ class WhileNode : public StmtNode {
 public:
     std::unique_ptr<ExprNode> condition;
     std::unique_ptr<StmtNode> body;
+    // [VER-6] Invariante de bucle e indicador de terminación
+    std::unique_ptr<ExprNode> invariant;  // anotación @invariant
+    std::unique_ptr<ExprNode> variant;    // anotación @variant  (para VER-11)
     WhileNode(ExprNode* cond, StmtNode* b, int l, int c)
         : StmtNode(l, c), condition(cond), body(b) {}
     void accept(Visitor* v) override { v->visit(this); }
@@ -122,8 +125,18 @@ public:
     std::string name;
     int returnType;
     std::unique_ptr<BlockNode> body;
+    // [VER-3] Tripleta de Hoare: {pre} body {post}
+    std::unique_ptr<ExprNode> precondition;   // anotación @pre
+    std::unique_ptr<ExprNode> postcondition;  // anotación @post
     MethodNode(const std::string& n, int rt, BlockNode* b, int l, int c)
         : StmtNode(l, c), name(n), returnType(rt), body(b) {}
+    void accept(Visitor* v) override { v->visit(this); }
+};
+
+// [VER-1] Referencia al valor de retorno en postcondiciones: result
+class ResultNode : public ExprNode {
+public:
+    ResultNode(int l, int c) : ExprNode(l, c) {}
     void accept(Visitor* v) override { v->visit(this); }
 };
 

@@ -65,8 +65,16 @@ void count(void) {
 "while"             { RET_ATTR(while_token); }
 "true"              { RET_ATTR(ctebool); }
 "false"             { RET_ATTR(ctebool); }
+"result"            { RET_ATTR(result_token); }
 
 [a-zA-Z][a-zA-Z0-9]* { RET_ATTR(id); }
+
+"@pre"              { RET_ATTR(pre_token); }
+"@post"             { RET_ATTR(post_token); }
+"@invariant"        { RET_ATTR(invariant_token); }
+"@variant"          { RET_ATTR(variant_token); }
+
+"==>"               { RET_ATTR(implies_token); }
 
 [0-9]+ { RET_ATTR(nentero); }
 

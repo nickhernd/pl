@@ -122,6 +122,10 @@ public:
     void visit(ReadNode* node) override {
         printIndent(); std::cout << "ReadNode: " << (node->isDouble ? "nextDouble" : "nextInt") << std::endl;
     }
+
+    void visit(ResultNode* node) override {
+        printIndent(); std::cout << "ResultNode" << std::endl;
+    }
 };
 
 #endif

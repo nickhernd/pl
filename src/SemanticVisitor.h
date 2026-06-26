@@ -208,6 +208,13 @@ public:
     void visit(ReadNode* node) override {
         node->type = node->isDouble ? REAL : ENTERO;
     }
+
+    // [VER-1] result: tipo de retorno del método actual
+    void visit(ResultNode* node) override {
+        if (currentReturnType == -1)
+            error(node->line, node->column, "'result' solo es válido en postcondiciones de funciones no-void");
+        node->type = currentReturnType;
+    }
 };
 
 #endif

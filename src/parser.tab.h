@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 117 "src/parser.y"
+#line 121 "src/parser.y"
 
   #include "ASTNodes.h"
   #include "comun.h"
@@ -84,27 +84,33 @@ extern int yydebug;
     static_token = 278,            /* static_token  */
     void_token = 279,              /* void_token  */
     main_token = 280,              /* main_token  */
-    boolean = 281,                 /* boolean  */
-    int_type = 282,                /* int_type  */
-    double_type = 283,             /* double_type  */
-    out_token = 284,               /* out_token  */
-    in_token = 285,                /* in_token  */
-    print_token = 286,             /* print_token  */
-    println_token = 287,           /* println_token  */
-    string_token = 288,            /* string_token  */
-    import_token = 289,            /* import_token  */
-    new_token = 290,               /* new_token  */
-    scanner_token = 291,           /* scanner_token  */
-    nextint = 292,                 /* nextint  */
-    nextdouble = 293,              /* nextdouble  */
-    else_token = 294,              /* else_token  */
-    coma = 295,                    /* coma  */
-    pyc = 296,                     /* pyc  */
-    punto = 297,                   /* punto  */
-    pari = 298,                    /* pari  */
-    pard = 299,                    /* pard  */
-    llavei = 300,                  /* llavei  */
-    llaved = 301                   /* llaved  */
+    pre_token = 281,               /* pre_token  */
+    post_token = 282,              /* post_token  */
+    invariant_token = 283,         /* invariant_token  */
+    variant_token = 284,           /* variant_token  */
+    implies_token = 285,           /* implies_token  */
+    result_token = 286,            /* result_token  */
+    boolean = 287,                 /* boolean  */
+    int_type = 288,                /* int_type  */
+    double_type = 289,             /* double_type  */
+    out_token = 290,               /* out_token  */
+    in_token = 291,                /* in_token  */
+    print_token = 292,             /* print_token  */
+    println_token = 293,           /* println_token  */
+    string_token = 294,            /* string_token  */
+    import_token = 295,            /* import_token  */
+    new_token = 296,               /* new_token  */
+    scanner_token = 297,           /* scanner_token  */
+    nextint = 298,                 /* nextint  */
+    nextdouble = 299,              /* nextdouble  */
+    else_token = 300,              /* else_token  */
+    coma = 301,                    /* coma  */
+    pyc = 302,                     /* pyc  */
+    punto = 303,                   /* punto  */
+    pari = 304,                    /* pari  */
+    pard = 305,                    /* pard  */
+    llavei = 306,                  /* llavei  */
+    llaved = 307                   /* llaved  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -113,7 +119,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 122 "src/parser.y"
+#line 126 "src/parser.y"
 
     char *lexema;
     Atributos *attr;
@@ -122,7 +128,7 @@ union YYSTYPE
     ExprNode *expr;
     BlockNode *block;
 
-#line 126 "src/parser.tab.h"
+#line 132 "src/parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

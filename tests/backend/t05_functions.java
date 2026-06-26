@@ -6,8 +6,8 @@ public class TestFunctions {
     }
 
     public static void main(String[] args) {
-        int result;
-        result = compute();
-        System.out.println(result);
+        int val;
+        val = compute();
+        System.out.println(val);
     }
 }

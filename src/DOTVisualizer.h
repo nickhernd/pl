@@ -161,6 +161,11 @@ public:
         lastNode = newNode();
         setLabel(lastNode, node->isDouble ? "ReadDouble" : "ReadInt");
     }
+
+    void visit(ResultNode* node) override {
+        lastNode = newNode();
+        setLabel(lastNode, "result");
+    }
 };
 
 #endif

@@ -21,6 +21,7 @@ class ReturnNode;
 class MethodNode;
 class CallNode;
 class ReadNode;
+class ResultNode;
 
 class Visitor {
 public:
@@ -41,6 +42,7 @@ public:
     virtual void visit(BoolLiteralNode* node) = 0;
     virtual void visit(CallNode* node) = 0;
     virtual void visit(ReadNode* node) = 0;
+    virtual void visit(ResultNode* node) = 0;
 };
 
 #endif

@@ -84,6 +84,10 @@ int yyerror(const char *s) {
 TablaSimbolos *ts = new TablaSimbolos(NULL);
 TablaTipos tt;
 
+// [VER-1] Variables globales para acumular anotaciones antes de un método
+ExprNode* g_pre  = nullptr;
+ExprNode* g_post = nullptr;
+
 unsigned next_dir = 0;
 unsigned next_tmp = 16000;
 unsigned next_label = 1;
@@ -129,13 +133,15 @@ unsigned getSafeTmp(int above) {
 }
 
 %token <attr> id nentero nreal relop addop mulop ctebool asig cori cord and_token or_token not_token if_token while_token system_token return_token final_token class_token public_token static_token void_token main_token
+%token <attr> pre_token post_token invariant_token variant_token implies_token result_token
 %token boolean int_type double_type out_token in_token print_token println_token string_token import_token new_token scanner_token nextint nextdouble else_token coma pyc punto pari pard llavei llaved
 
-%type <attr> Import SecImp Tipo BDecl DVar DimSN Dimensiones LIdent Variable Ref 
+%type <attr> Import SecImp Tipo BDecl DVar DimSN Dimensiones LIdent Variable Ref
 %type <node> S Class
 %type <stmt> Main Method Member Instr
 %type <block> Bloque SeqInstr Members
 %type <expr> Expr EConj ERel Esimple Term Factor IfGuard WhileGuard
+%type <expr> PredExpr OptPre OptPost OptInvariant OptVariant
 
 %%
 
@@ -162,6 +168,16 @@ Members : Members Member {
     if ($2) $1->add($2);
     $$ = $1;
 }
+| Members OptPre {
+    // [VER-1] Anotación @pre acumulada para el siguiente método
+    delete g_pre; g_pre = $2;
+    $$ = $1;
+}
+| Members OptPost {
+    // [VER-1] Anotación @post acumulada para el siguiente método
+    delete g_post; g_post = $2;
+    $$ = $1;
+}
 | {
     $$ = new BlockNode(nlin, ncol);
 }
@@ -171,7 +187,11 @@ Member : Main { $$ = $1; }
 | DVar { $$ = nullptr; }
 
 Main : public_token static_token void_token main_token pari string_token cori cord id pard Bloque {
-    $$ = new MethodNode("main", -1, $11, $1->nlin, $1->ncol);
+    MethodNode* m = new MethodNode("main", -1, $11, $1->nlin, $1->ncol);
+    m->precondition.reset(g_pre);
+    m->postcondition.reset(g_post);
+    g_pre = g_post = nullptr;
+    $$ = m;
 }
 
 Method : public_token static_token Tipo id pari pard Bloque {
@@ -181,7 +201,11 @@ Method : public_token static_token Tipo id pari pard Bloque {
     s.isFunction = true;
     s.returnType = $3->tipo;
     ts->set(s);
-    $$ = new MethodNode($4->lexema, $3->tipo, $7, $4->nlin, $4->ncol);
+    MethodNode* m = new MethodNode($4->lexema, $3->tipo, $7, $4->nlin, $4->ncol);
+    m->precondition.reset(g_pre);
+    m->postcondition.reset(g_post);
+    g_pre = g_post = nullptr;
+    $$ = m;
 }
 | public_token static_token void_token id pari pard Bloque {
     Simbolo s;
@@ -190,7 +214,11 @@ Method : public_token static_token Tipo id pari pard Bloque {
     s.isFunction = true;
     s.returnType = -1;
     ts->set(s);
-    $$ = new MethodNode($4->lexema, -1, $7, $4->nlin, $4->ncol);
+    MethodNode* m = new MethodNode($4->lexema, -1, $7, $4->nlin, $4->ncol);
+    m->precondition.reset(g_pre);
+    m->postcondition.reset(g_post);
+    g_pre = g_post = nullptr;
+    $$ = m;
 }
 
 Tipo : int_type { $$ = new Atributos(); $$->tipo = ENTERO; $$->tam = 1; }
@@ -284,8 +312,11 @@ Instr : pyc { $$ = nullptr; }
 | IfGuard Instr else_token Instr {
     $$ = new IfNode($1, $2, $4, $1->line, $1->column);
 }
-| WhileGuard Instr {
-    $$ = new WhileNode($1, $2, $1->line, $1->column);
+| WhileGuard OptInvariant OptVariant Instr {
+    WhileNode* w = new WhileNode($1, $4, $1->line, $1->column);
+    w->invariant.reset($2);
+    w->variant.reset($3);
+    $$ = w;
 }
 | return_token Expr pyc {
     $$ = new ReturnNode($2, $1->nlin, $1->ncol);
@@ -346,6 +377,9 @@ Factor : pari Expr pard {
 | id pari pard {
     $$ = new CallNode($1->lexema, $1->nlin, $1->ncol);
 }
+| result_token {
+    $$ = new ResultNode($1->nlin, $1->ncol);
+}
 | id punto nextint pari pard {
     $$ = new ReadNode(false, $1->nlin, $1->ncol);
 }
@@ -367,6 +401,26 @@ IfGuard : if_token pari Expr pard {
 WhileGuard : while_token pari Expr pard {
     $$ = $3;
 }
+
+// [VER-1] Predicados para anotaciones: extienden Expr con ==> (implica)
+PredExpr : Expr implies_token Expr {
+    $$ = new BinaryExprNode("==>", $1, $3, $2->nlin, $2->ncol);
+}
+| Expr { $$ = $1; }
+
+// Anotaciones opcionales de método
+OptPre  : pre_token PredExpr  { $$ = $2; }
+        | /* vacío */          { $$ = nullptr; }
+
+OptPost : post_token PredExpr { $$ = $2; }
+        | /* vacío */          { $$ = nullptr; }
+
+// [VER-6] Anotaciones opcionales de bucle
+OptInvariant : invariant_token PredExpr { $$ = $2; }
+             | /* vacío */               { $$ = nullptr; }
+
+OptVariant   : variant_token PredExpr   { $$ = $2; }
+             | /* vacío */               { $$ = nullptr; }
 
 %%
 

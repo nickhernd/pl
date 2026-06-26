@@ -190,6 +190,11 @@ public:
         lastResult = result;
     }
 
+    // [VER-1] result en anotaciones: no genera código, es solo para verificación
+    void visit(ResultNode* node) override {
+        lastResult = IRArg::none();
+    }
+
     // [BND-12] Lectura de stdin: emite IR_READ_INT o IR_READ_REAL
     void visit(ReadNode* node) override {
         int type = node->isDouble ? REAL : ENTERO;
