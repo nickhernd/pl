@@ -343,11 +343,14 @@ Factor : pari Expr pard {
 | addop Factor {
     $$ = new UnaryExprNode($1->lexema, $2, $1->nlin, $1->ncol);
 }
+| id pari pard {
+    $$ = new CallNode($1->lexema, $1->nlin, $1->ncol);
+}
 | id punto nextint pari pard {
-    $$ = new IntLiteralNode(0, $1->nlin, $1->ncol);
+    $$ = new ReadNode(false, $1->nlin, $1->ncol);
 }
 | id punto nextdouble pari pard {
-    $$ = new FloatLiteralNode(0.0, $1->nlin, $1->ncol);
+    $$ = new ReadNode(true, $1->nlin, $1->ncol);
 }
 
 Ref : id {
@@ -369,28 +372,71 @@ WhileGuard : while_token pari Expr pard {
 
 #include "ASTVisualizer.h"
 #include "DOTVisualizer.h"
-#include "CodeGenerator.h"
 #include "SemanticVisitor.h"
+#include "IRBuilder.h"
+#include "IROptimizer.h"
+#include "IRVisualizer.h"
+#include "IRLinearizer.h"
+#include "X86Generator.h"
+#include "RegisterAllocator.h"
 
 int main(int argc, char *argv[]) {
-    if (argc > 1) {
-        yyin = fopen(argv[1], "r");
+    bool showIR      = false;
+    bool showRegAlloc = false;
+    const char* filename = nullptr;
+
+    for (int i = 1; i < argc; ++i) {
+        if      (strcmp(argv[i], "--ir")       == 0) showIR = true;
+        else if (strcmp(argv[i], "--reg-alloc") == 0) showRegAlloc = true;
+        else if (argv[i][0] != '-')                  filename = argv[i];
+        else {
+            fprintf(stderr, "Uso: %s [--ir] [--reg-alloc] <fichero.java>\n", argv[0]);
+            return 1;
+        }
+    }
+
+    if (filename) {
+        yyin = fopen(filename, "r");
         if (!yyin) {
-            fprintf(stderr, "No se pudo abrir el fichero %s\n", argv[1]);
-            exit(1);
+            fprintf(stderr, "No se pudo abrir el fichero %s\n", filename);
+            return 1;
         }
     }
-    if (yyparse() == 0 && rootAST) {
-        SemanticVisitor semantic(ts, &tt);
-        rootAST->accept(&semantic);
-        
-        if (semantic.success()) {
-            CodeGenerator gen;
-            gen.generate(rootAST, 4096);
-        } else {
-            std::cerr << "Compilation failed due to semantic errors." << std::endl;
-        }
+
+    if (yyparse() != 0 || !rootAST) return 1;
+
+    SemanticVisitor semantic(ts, &tt);
+    rootAST->accept(&semantic);
+
+    if (!semantic.success()) {
+        std::cerr << "Error de compilacion: errores semanticos." << std::endl;
         delete rootAST;
+        return 1;
     }
+
+    // Pipeline: AST -> IR (cuadruplas) -> optimizacion -> x86-64
+    IRProgram prog;
+    IRBuilder builder(prog, ts);
+    rootAST->accept(&builder);
+
+    IROptimizer::eliminateDeadCode(prog);
+
+    if (showIR) {
+        IRVisualizer::print(prog, std::cerr);
+        IRLinearizer lin;
+        lin.build(prog);
+        lin.dump(std::cerr);
+    }
+
+    if (showRegAlloc) {
+        RegisterAllocator ra;
+        RegMap rm = ra.allocate(prog);
+        RegisterAllocator::dump(rm, std::cerr);
+    }
+
+    X86Generator codegen(std::cout);
+    codegen.generate(prog);
+
+    delete rootAST;
     return 0;
 }

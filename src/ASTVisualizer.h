@@ -114,6 +114,14 @@ public:
     void visit(BoolLiteralNode* node) override {
         printIndent(); std::cout << "BoolLiteralNode: " << (node->value ? "true" : "false") << std::endl;
     }
+
+    void visit(CallNode* node) override {
+        printIndent(); std::cout << "CallNode: " << node->name << "()" << std::endl;
+    }
+
+    void visit(ReadNode* node) override {
+        printIndent(); std::cout << "ReadNode: " << (node->isDouble ? "nextDouble" : "nextInt") << std::endl;
+    }
 };
 
 #endif

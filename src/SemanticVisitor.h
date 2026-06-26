@@ -189,6 +189,25 @@ public:
     void visit(IntLiteralNode* node) override { node->type = ENTERO; }
     void visit(FloatLiteralNode* node) override { node->type = REAL; }
     void visit(BoolLiteralNode* node) override { node->type = LOGICO; }
+
+    // [BND-8] Llamada a función: verifica que existe y obtiene su tipo de retorno
+    void visit(CallNode* node) override {
+        Simbolo* s = currentTS->get(node->name);
+        if (!s) {
+            error(node->line, node->column, "Function '" + node->name + "' not declared");
+            node->type = -1;
+        } else if (!s->isFunction) {
+            error(node->line, node->column, "'" + node->name + "' is not a function");
+            node->type = -1;
+        } else {
+            node->type = s->returnType;
+        }
+    }
+
+    // [BND-12] Lectura de stdin: tipo determinado por nextInt/nextDouble
+    void visit(ReadNode* node) override {
+        node->type = node->isDouble ? REAL : ENTERO;
+    }
 };
 
 #endif

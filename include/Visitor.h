@@ -19,6 +19,8 @@ class BlockNode;
 class PrintNode;
 class ReturnNode;
 class MethodNode;
+class CallNode;
+class ReadNode;
 
 class Visitor {
 public:
@@ -37,6 +39,8 @@ public:
     virtual void visit(IntLiteralNode* node) = 0;
     virtual void visit(FloatLiteralNode* node) = 0;
     virtual void visit(BoolLiteralNode* node) = 0;
+    virtual void visit(CallNode* node) = 0;
+    virtual void visit(ReadNode* node) = 0;
 };
 
 #endif

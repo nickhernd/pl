@@ -151,6 +151,16 @@ public:
         lastNode = newNode();
         setLabel(lastNode, "Bool: " + std::string(node->value ? "true" : "false"));
     }
+
+    void visit(CallNode* node) override {
+        lastNode = newNode();
+        setLabel(lastNode, "Call: " + node->name + "()");
+    }
+
+    void visit(ReadNode* node) override {
+        lastNode = newNode();
+        setLabel(lastNode, node->isDouble ? "ReadDouble" : "ReadInt");
+    }
 };
 
 #endif

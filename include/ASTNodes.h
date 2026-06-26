@@ -127,6 +127,22 @@ public:
     void accept(Visitor* v) override { v->visit(this); }
 };
 
+// [BND-8] Llamada a función sin argumentos: foo()
+class CallNode : public ExprNode {
+public:
+    std::string name;
+    CallNode(const std::string& n, int l, int c) : ExprNode(l, c), name(n) {}
+    void accept(Visitor* v) override { v->visit(this); }
+};
+
+// [BND-12] Lectura de stdin: scanner.nextInt() / scanner.nextDouble()
+class ReadNode : public ExprNode {
+public:
+    bool isDouble;
+    ReadNode(bool d, int l, int c) : ExprNode(l, c), isDouble(d) {}
+    void accept(Visitor* v) override { v->visit(this); }
+};
+
 // Program Node
 class ProgramNode : public Node {
 public:
