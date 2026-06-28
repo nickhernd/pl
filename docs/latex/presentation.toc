@@ -1,10 +1,10 @@
-\babel@toc {spanish}{}\relax 
-\beamer@sectionintoc {1}{Arquitectura general}{3}{0}{1}
-\beamer@sectionintoc {2}{Front-end: L\'exico y Sint\'actico}{5}{0}{2}
-\beamer@sectionintoc {3}{An\'alisis sem\'antico}{7}{0}{3}
-\beamer@sectionintoc {4}{Representaci\'on Intermedia}{8}{0}{4}
-\beamer@sectionintoc {5}{Backend x86-64}{9}{0}{5}
-\beamer@sectionintoc {6}{Asignaci\'on de registros}{10}{0}{6}
-\beamer@sectionintoc {7}{Verificaci\'on formal}{11}{0}{7}
-\beamer@sectionintoc {8}{Pruebas y resultados}{16}{0}{8}
-\beamer@sectionintoc {9}{Conclusiones}{17}{0}{9}
+\babel@toc {english}{}\relax 
+\beamer@sectionintoc {1}{General Architecture}{3}{0}{1}
+\beamer@sectionintoc {2}{Front-end: Lexer \& Parser}{5}{0}{2}
+\beamer@sectionintoc {3}{Semantic Analysis}{9}{0}{3}
+\beamer@sectionintoc {4}{Intermediate Representation (3AC)}{11}{0}{4}
+\beamer@sectionintoc {5}{x86-64 Backend}{15}{0}{5}
+\beamer@sectionintoc {6}{Register Allocation}{18}{0}{6}
+\beamer@sectionintoc {7}{Formal Verification}{21}{0}{7}
+\beamer@sectionintoc {8}{Tests and Results}{35}{0}{8}
+\beamer@sectionintoc {9}{Conclusions}{37}{0}{9}

@@ -1,7 +1,8 @@
-\frametitle{Demo: verificaci\'on completa}
+\frametitle{Demo: Three Verified Methods}
+
 \begin{columns}[t]
-  \column{0.52\textwidth}
-\begin{lstlisting}[style=javaslide]
+  \column{0.50\textwidth}
+\begin{lstlisting}[style=javaslide,basicstyle=\ttfamily\scriptsize]
 @pre  true
 @post result >= 0
 public static int absValue() {
@@ -9,12 +10,16 @@ public static int absValue() {
     if (x < 0) return -x;
     return x;
 }
-
-@post result > 10          // BUG!
+\end{lstlisting}
+\vspace{2pt}
+\begin{lstlisting}[style=javaslide,basicstyle=\ttfamily\scriptsize]
+@post result > 10     // intentional BUG!
 public static int wrongMethod() {
     int x; x = 5; return x;
 }
-
+\end{lstlisting}
+\vspace{2pt}
+\begin{lstlisting}[style=javaslide,basicstyle=\ttfamily\scriptsize]
 @post result >= 0
 public static int sumLoop() {
     int i; int s; i=1; s=0;
@@ -26,29 +31,35 @@ public static int sumLoop() {
 }
 \end{lstlisting}
 
-  \column{0.48\textwidth}
-  \begin{exampleblock}{Salida del verificador}
-\begin{lstlisting}[style=asmslide]
+  \column{0.46\textwidth}
+  \begin{exampleblock}{Verifier Output}
+\begin{lstlisting}[style=asmslide,basicstyle=\ttfamily\scriptsize]
 $ ./compiler --verify demo.java
 
 [OK]  absValue
-      correccion (unsat)
+      correctness  (unsat)
 
 [OK]  sumLoop
-      iniciacion (unsat)
+      initiation   (unsat)
 [OK]  sumLoop
-      preservacion (unsat)
+      preservation (unsat)
 [OK]  sumLoop
-      uso (unsat)
+      use          (unsat)
 [OK]  sumLoop
-      correccion (unsat)
+      correctness  (unsat)
 [OK]  sumLoop
-      terminacion (unsat)
+      termination  (unsat)
 
 [BUG] wrongMethod
-      correccion (sat) <-- bug!
+      correctness (sat)
+      counterex: result=5, 5>10 FALSE
 \end{lstlisting}
   \end{exampleblock}
-  \bigskip
-  \centering\textbf{6 OK} $\;\cdot\;$ \textcolor{warn}{\textbf{1 BUG detectado}}
+
+  \vspace{0.3cm}
+  \centering
+  \begin{beamercolorbox}[rounded=true,center,wd=\textwidth]{block title example}
+    \large\bfseries
+    \textcolor{accent}{6 OK} \quad\textbf{$\cdot$}\quad \textcolor{warn}{1 BUG detected}
+  \end{beamercolorbox}
 \end{columns}
