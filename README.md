@@ -1,84 +1,92 @@
 # JavaSubset Compiler — Java → x86-64
 
-A compiler for a statically-typed Java subset that translates source code to native x86-64 assembly via a three-address code intermediate representation. Built with Flex + Bison, C++11.
+A compiler for a statically-typed Java subset that translates source code to native x86-64 assembly via a three-address code intermediate representation, with optional formal verification using Hoare Logic and the Z3 SMT solver. Built with Flex + Bison, C++11.
 
 ## Architecture
 
 ```
 Source (.java)
-    │
-    ▼
-┌─────────────┐
-│  Lexer      │  Flex — tokenization
-│  (lexer.l)  │
-└─────┬───────┘
-      │ token stream
-      ▼
-┌─────────────┐
-│  Parser     │  Bison — grammar + AST construction
-│ (parser.y)  │
-└─────┬───────┘
-      │ AST
-      ▼
+     │
+     ▼
+┌──────────────┐
+│  Lexer       │  Flex — tokenization, annotation tokens
+│  (lexer.l)   │
+└──────┬───────┘
+       │ token stream
+       ▼
+┌──────────────┐
+│  Parser      │  Bison LALR(1) — grammar + AST construction
+│ (parser.y)   │
+└──────┬───────┘
+       │ AST
+       ▼
 ┌──────────────────┐
 │ SemanticVisitor  │  Type checking, symbol resolution,
-│                  │  @pre/@post annotation parsing
-└─────┬────────────┘
-      │ typed AST
-      ▼
-┌─────────────┐
-│  IRBuilder  │  AST → 3-address code quadruples (IR)
-└─────┬───────┘
-      │ IR quadruples
-      ▼
-┌──────────────┐
-│ IROptimizer  │  Constant folding, dead-code elimination,
-│              │  copy propagation
-└─────┬────────┘
-      │ optimised IR
-      ▼
-┌──────────────────┐
+│                  │  @pre/@post/@invariant annotation binding
+└──────┬───────────┘
+       │ typed AST + TablaSimbolos
+       ├──────────────────────────────────────────────┐
+       ▼                                              │ --verify
+┌──────────────┐                               ┌─────▼──────────┐
+│  IRBuilder   │  AST → 3-address quadruples   │  VCGenerator   │
+└──────┬───────┘                               │  WPCalculus    │
+       │ IR quadruples                         └─────┬──────────┘
+       ▼                                            │ VCs
+┌──────────────┐                               ┌────▼───────────┐
+│ IROptimizer  │  Dead-code, const folding,    │  SMTExporter   │
+│              │  copy propagation             │  (.smt2 + Z3)  │
+└──────┬───────┘                               └────┬───────────┘
+       │ optimised IR                               │ unsat/sat/unknown
+       ▼                                            ▼
+┌──────────────────┐                         [OK] / [BUG] report
 │ RegisterAllocator│  Chaitin-Briggs graph coloring
-│                  │  (liveness analysis → interference graph)
-└─────┬────────────┘
-      │ register map
-      ▼
+│                  │  (liveness → interference graph → K=6 colors)
+└──────┬───────────┘
+       │ register map (temp → %reg | spill)
+       ▼
 ┌──────────────┐
-│ X86Generator │  IR → AT&T syntax x86-64 assembly
-└─────┬────────┘
-      │ .s file
-      ▼
-    gcc/as → native ELF binary
+│ X86Generator │  IR → AT&T x86-64 assembly (System V ABI)
+└──────┬───────┘
+       │ .s file
+       ▼
+   gcc -no-pie → native ELF binary
 ```
 
 ## Language Features
 
-| Feature | Status |
+| Feature | Support |
 |---|---|
-| `int`, `double`, `boolean` types | ✓ |
+| Types: `int`, `double`, `boolean` | ✓ |
 | Arithmetic: `+`, `-`, `*`, `/`, `%` | ✓ |
-| Comparison & logical operators | ✓ |
-| `if`/`else`, `while` | ✓ |
+| Comparison and logical operators | ✓ |
+| `if` / `else`, `while` | ✓ |
 | `final` constants | ✓ |
 | Static methods, `return` | ✓ |
 | `System.out.print` / `println` | ✓ |
 | `Scanner.nextInt()` / `nextDouble()` | ✓ |
-| `@pre` / `@post` annotations | ✓ |
-| `@invariant` / `@variant` on loops | ✓ |
-| `==>` (logical implication in specs) | ✓ |
+| Formal annotations: `@pre`, `@post` | ✓ |
+| Loop annotations: `@invariant`, `@variant` | ✓ |
+| Implication operator `==>` in specs | ✓ |
+| Division-by-zero safety VCs | ✓ |
+| Termination VCs via `@variant` | ✓ |
 
 ## Building
 
 **Dependencies:** `make`, `g++`, `flex`, `bison`
 
+For formal verification: `z3`
+
+```bash
+# Arch Linux
+sudo pacman -S base-devel flex bison z3
+
+# Debian / Ubuntu
+sudo apt install build-essential flex bison z3
+```
+
 ```bash
 make          # build ./compiler
 make clean    # remove generated files
-```
-
-On Arch Linux:
-```bash
-sudo pacman -S base-devel flex bison
 ```
 
 ## Usage
@@ -86,155 +94,201 @@ sudo pacman -S base-devel flex bison
 ### Compile to assembly and link
 
 ```bash
-./compiler program.java          # emits program.s
-gcc -no-pie -o program program.s # link to binary
+./compiler program.java            # emits program.s
+gcc -no-pie -o program program.s   # link to binary
 ./program
 ```
 
 ### Compiler flags
 
-| Flag | Description |
-|---|---|
-| *(none)* | Compile to `.s` file |
-| `--ir` | Print IR quadruples to stderr |
-| `--reg-alloc` | Print register allocation map to stderr |
+| Flag | Output | Description |
+|---|---|---|
+| *(none)* | `program.s` | Compile to AT&T x86-64 assembly |
+| `--ir` | stderr | Print IR quadruples (3-address code) |
+| `--reg-alloc` | stderr | Print register allocation map |
+| `--dot` | stdout | DOT graph of the AST |
+| `--verify` | `program.smt2` | Formal verification via Z3 |
 
-### Produce a DOT AST visualisation
+### Visualise the AST
 
 ```bash
 ./compiler --dot program.java | dot -Tpng -o ast.png
 ```
 
-## Running the test suite
+### Formal verification
 
 ```bash
-bash tests/run_tests.sh
+./compiler --verify tests/verification/demo_verified.java
 ```
 
-Tests compile each `.java` → `.s` → binary, run it, and compare stdout against `.expected`.
-
+Output:
 ```
-PASS: t01_print.java
-PASS: t02_arithmetic.java
-PASS: t03_if_else.java
-PASS: t04_while.java
-PASS: t05_functions.java
-
-Resultados: 5 PASS, 0 FAIL, 0 ERROR
-```
-
-To run semantic-error tests:
-```bash
-for f in tests/semantic_errors/*.java; do
-    echo "=== $f ==="; ./compiler "$f" 2>&1; echo
-done
+[OK]  [absValue] correctitud (unsat)
+[OK]  [sumLoop] iniciacion del invariante (unsat)
+[OK]  [sumLoop] preservacion del invariante (unsat)
+[OK]  [sumLoop] uso del invariante (unsat)
+[OK]  [sumLoop] correctitud (unsat)
+[OK]  [sumLoop] terminacion (unsat)
+[BUG] [wrongMethod] correctitud (sat)   <-- bug detectado
 ```
 
-## Formal Verification (Milestone 5 — in progress)
+## Formal Verification
 
-The compiler includes infrastructure for Hoare-logic verification using the **Z3 SMT solver**.
-
-### Annotation syntax
+The `--verify` flag activates the Hoare Logic verification pipeline. Annotate your methods and loops with formal specifications:
 
 ```java
-// @pre  — precondition on method entry
-// @post — postcondition on method exit (use 'result' for the return value)
-public static int abs(int x)
-@pre  x != 0
-@post result > 0
-{
-    if (x > 0) return x;
-    return -x;
+@pre  true
+@post result >= 0
+public static int absValue() {
+    int x;
+    x = -5;
+    if (x < 0) return -x;
+    return x;
 }
 
-// @invariant / @variant on while loops
-while (i < n)
-@invariant sum == i * (i + 1) / 2
-@variant   n - i
-{
-    sum = sum + i;
-    i = i + 1;
+@post result >= 0
+public static int sumLoop() {
+    int i; int s;
+    i = 1; s = 0;
+    while (i <= 5)
+    @invariant s >= 0 && i >= 1
+    @variant   6 - i
+    {
+        s = s + i;
+        i = i + 1;
+    }
+    return s;
 }
 ```
 
 ### How it works
 
-1. `Predicate.h` — logical predicate hierarchy (VarPred, BinaryPred, ImpliesPred, …)
-2. `WPCalculus.h` — Weakest Precondition calculus with continuation-passing for early returns
-3. `VCGenerator.h` — generates Verification Conditions: correctness (VER-7), loop invariants (VER-6), division-by-zero (VER-9), termination (VER-11)
-4. `SMTExporter.h` — serialises VCs to SMT-Lib2, runs Z3, reports results (VER-8, VER-10)
+1. **`WPCalculus.h`** — Weakest Precondition calculus with continuation-passing semantics for early `return` statements inside `if` branches. The naive reverse-iteration approach fails for early returns; the CPS approach threads the continuation into each branch so every `return e` always has access to the original postcondition `Q`.
 
-Install Z3:
+2. **`VCGenerator.h`** — Generates four types of Verification Conditions:
+   - *Correctness*: `P ==> WP(body, Q)`
+   - *Loop initiation*: `P ==> WP(stmts_before, I)`
+   - *Loop preservation*: `(I && B) ==> WP(body, I)`
+   - *Loop use*: `(I && !B) ==> WP(stmts_after, Q)`
+   - *Termination*: `(I && B) ==> variant >= 0`
+   - *Division safety*: `P ==> divisor != 0`
+
+3. **`SMTExporter.h`** — Serialises each VC to SMT-Lib2 format, invokes Z3, and reports coloured results. A `UNSAT` response from Z3 means the VC is valid (the program is correct at that point). A `SAT` response means Z3 found a counterexample — a bug.
+
+### Annotation syntax
+
+| Annotation | Placement | Meaning |
+|---|---|---|
+| `@pre expr` | Before method | Precondition on entry |
+| `@post expr` | Before method | Postcondition on exit (`result` = return value) |
+| `@invariant expr` | Before `while` body | Loop invariant |
+| `@variant expr` | Before `while` body | Termination measure (must decrease) |
+
+### Loop invariant strength
+
+Invariants must be **strong enough** to prove preservation. A weak invariant allows Z3 to find counterexamples:
+
+```java
+// Weak: Z3 finds (i = -1, s = 0) satisfying (s >= 0 && i <= 5)
+// but (s + i) = -1 < 0 — preservation fails
+@invariant s >= 0
+
+// Strong: (s >= 0 && i >= 1 && i <= 5) ==> (s + i) >= 0  -- UNSAT
+@invariant s >= 0 && i >= 1
+```
+
+## Test Suite
+
 ```bash
-sudo pacman -S z3    # Arch
-sudo apt install z3  # Debian/Ubuntu
+bash tests/run_tests.sh
 ```
 
-### Example output
+### Backend tests (5)
+
+End-to-end: compile `.java` → `.s` → binary, run, compare stdout.
+
+| Test | What it covers |
+|---|---|
+| `t01_print.java` | `System.out.println` of integers |
+| `t02_arithmetic.java` | Arithmetic, precedence, modulo |
+| `t03_if_else.java` | Nested conditionals |
+| `t04_while.java` | Loop with accumulator, return |
+| `t05_functions.java` | Inter-method calls |
+
+### Semantic error tests (10)
+
+The compiler must reject these with a non-zero exit code.
 
 ```
-$ ./compiler --verify tests/verification/demo_verified.java
-=== Verificacion Formal ===
-  [OK]  [absValue] correctitud
-  [BUG] [wrongMethod] correctitud — contraejemplo encontrado
-  [OK]  [sumLoop] correctitud
-  [OK]  [sumLoop] invariant iniciacion
-  [OK]  [sumLoop] invariant preservacion
-  [OK]  [sumLoop] invariant uso
-  [OK]  [sumLoop] terminacion (variante >= 0)
-
-  Resultado: 6 OK, 1 BUGS
+err01_const_assign       err06_return_missing_val
+err02_return_mismatch    err07_unreachable_after_if
+err03_missing_return     err08_const_double_assign
+err04_unreachable_code   err09_incompatible_types_assign
+err05_void_return_val    err10_if_cond_not_bool
 ```
 
-### Loop invariant notes
+### Verification tests (1)
 
-Loop invariants must be **strong enough** for the verifier to prove preservation:
-- Weak: `@invariant s >= 0` — may fail preservation if loop variables are unconstrained
-- Strong: `@invariant s >= 0 && i >= 1` — captures all relevant loop state
+```bash
+./compiler --verify tests/verification/demo_verified.java
+```
+
+Verifies `absValue` (correct), `wrongMethod` (intentional bug, detected), and `sumLoop` (loop invariant + termination).
 
 ## Project Structure
 
 ```
 .
 ├── include/
-│   ├── ASTNodes.h          AST node hierarchy
-│   ├── IR.h                IR opcodes and quadruples
-│   ├── Predicate.h         Logical predicate types (Hoare logic)
-│   ├── Visitor.h           Visitor interface
-│   ├── TablaSimbolos.h     Symbol table
-│   └── TablaTipos.h        Type system
+│   ├── ASTNodes.h            AST node hierarchy (all node types)
+│   ├── IR.h                  IR opcodes and quadruple format
+│   ├── Predicate.h           Logical predicate hierarchy (Hoare logic)
+│   ├── Visitor.h             Visitor interface (GoF pattern)
+│   ├── TablaSimbolos.h       Symbol table (lexical scoping)
+│   └── TablaTipos.h          Type system
 ├── src/
-│   ├── lexer.l             Flex lexer
-│   ├── parser.y            Bison grammar
-│   ├── SemanticVisitor.h   Type checker
-│   ├── IRBuilder.h         AST → IR translation
-│   ├── IROptimizer.h       IR optimisation passes
-│   ├── RegisterAllocator.h Chaitin-Briggs register allocator
-│   ├── X86Generator.h      IR → x86-64 code generator
-│   ├── WPCalculus.h        Weakest precondition calculus (skeleton)
-│   ├── VCGenerator.h       Verification condition generator (skeleton)
-│   └── SMTExporter.h       SMT-Lib2 exporter for Z3 (skeleton)
+│   ├── lexer.l               Flex lexer (with annotation tokens)
+│   ├── parser.y              Bison grammar + semantic actions
+│   ├── SemanticVisitor.h     Type checker + annotation binding
+│   ├── IRBuilder.h           AST → IR translation
+│   ├── IROptimizer.h         Dead-code, constant folding, copy propagation
+│   ├── RegisterAllocator.h   Chaitin-Briggs graph coloring (K=6)
+│   ├── X86Generator.h        IR → x86-64 AT&T assembly
+│   ├── WPCalculus.h          WP calculus with CPS for early returns
+│   ├── VCGenerator.h         VC generation (correctness + invariants)
+│   └── SMTExporter.h         SMT-Lib2 export + Z3 invocation + reporting
 ├── tests/
-│   ├── backend/            End-to-end compilation tests
-│   ├── semantic_errors/    Semantic error detection tests
-│   └── run_tests.sh        Test runner script
+│   ├── backend/              End-to-end compilation tests (5)
+│   ├── semantic_errors/      Semantic error detection tests (10)
+│   ├── verification/         Formal verification demos (1)
+│   └── run_tests.sh          Test runner
+├── docs/
+│   └── latex/
+│       ├── main.tex          Full technical report (58 pages)
+│       ├── main.pdf          Compiled report PDF
+│       ├── presentation.tex  Beamer slide deck (18 slides)
+│       ├── presentation.pdf  Compiled presentation PDF
+│       ├── chapters/         One chapter per compiler phase (cap01–cap10)
+│       ├── apendices/        BNF grammar + x86-64 instruction reference
+│       └── referencias.bib   Bibliography (Hoare, Dijkstra, Dragon Book, …)
 └── Makefile
 ```
 
 ## Milestones
 
-| Milestone | Description | Status |
-|---|---|---|
-| 1 — Frontend | Lexer, parser, AST | Complete |
-| 2 — Semantics | Type checking, symbol tables | Complete |
-| 3 — IR | 3-address code, optimiser | Complete |
-| 4 — Backend x86-64 | Code gen, register alloc, calling convention, scanf | Complete |
-| 5 — Formal Verification | Hoare logic, WP calculus, Z3 integration | Complete |
+| # | Milestone | Key components | Status |
+|---|---|---|---|
+| 1 | Front-end | Flex lexer, Bison LALR(1) parser, C++ AST | Complete |
+| 2 | Semantic analysis | `TablaSimbolos`, type checking, `SemanticVisitor` | Complete |
+| 3 | IR + optimisation | 3-address quadruples, dead-code, folding, copy-prop | Complete |
+| 4 | Backend x86-64 | System V ABI, Chaitin-Briggs register allocation | Complete |
+| 5 | Formal verification | Hoare Logic, WP-CPS calculus, VCGenerator, Z3 | Complete |
 
 ## References
 
-- Aho, Lam, Sethi, Ullman — *Compilers: Principles, Techniques, and Tools* (Dragon Book)
-- Hoare — *An Axiomatic Basis for Computer Programming* (1969)
-- Dijkstra — *A Discipline of Programming* (1976)
-- Chaitin, Briggs — *Register Allocation via Coloring* (1982)
-- System V AMD64 ABI — [refspecs.linuxbase.org](https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf)
+- Aho, Lam, Sethi, Ullman — *Compilers: Principles, Techniques, and Tools* (Dragon Book, 2006)
+- Hoare — *An Axiomatic Basis for Computer Programming*, CACM 1969
+- Dijkstra — *A Discipline of Programming*, Prentice-Hall, 1976
+- Chaitin et al. — *Register Allocation via Coloring*, Computer Languages, 1981
+- de Moura & Bjørner — *Z3: An Efficient SMT Solver*, TACAS 2008
+- System V AMD64 ABI — [gitlab.com/x86-psABIs/x86-64-ABI](https://gitlab.com/x86-psABIs/x86-64-ABI)
