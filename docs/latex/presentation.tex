@@ -1,0 +1,793 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  presentation.tex  –  Presentación Beamer
+%  Compilar: pdflatex presentation.tex  (×2)
+% ─────────────────────────────────────────────────────────────────────────────
+\documentclass[aspectratio=169,12pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usefonttheme{professionalfonts}
+
+% ── Colores ──────────────────────────────────────────────────────────────────
+\definecolor{primary}{RGB}{0,62,126}
+\definecolor{accent}{RGB}{0,153,76}
+\definecolor{warn}{RGB}{200,30,30}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codegreen}{RGB}{34,139,34}
+\definecolor{codegray}{RGB}{128,128,128}
+\definecolor{codepurple}{RGB}{148,0,211}
+\definecolor{codeblue}{RGB}{0,51,178}
+
+\setbeamercolor{frametitle}{bg=primary,fg=white}
+\setbeamercolor{title}{bg=primary,fg=white}
+\setbeamercolor{structure}{fg=primary}
+\setbeamercolor{block title}{bg=primary!80,fg=white}
+\setbeamercolor{block body}{bg=primary!8}
+\setbeamercolor{block title alerted}{bg=warn!80,fg=white}
+\setbeamercolor{block body alerted}{bg=warn!8}
+\setbeamercolor{block title example}{bg=accent!80,fg=white}
+\setbeamercolor{block body example}{bg=accent!8}
+
+% ── Paquetes ─────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit,calc}
+\usepackage{array}
+\usepackage{multicol}
+
+% ── Listings ─────────────────────────────────────────────────────────────────
+\lstdefinestyle{javaslide}{
+  backgroundcolor=\color{codebg},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{codeblue}\bfseries,
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\tiny,
+  breaklines=true,
+  keepspaces=true,
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  numbersep=3pt,
+  tabsize=2,
+  language=Java,
+  morekeywords={result},
+  frame=single,
+  rulecolor=\color{gray!40},
+}
+\lstdefinestyle{cppslide}{
+  backgroundcolor=\color{codebg},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{codeblue}\bfseries,
+  basicstyle=\ttfamily\tiny,
+  breaklines=true,
+  numbers=none,
+  tabsize=2,
+  frame=single,
+  rulecolor=\color{gray!40},
+  language=C++,
+}
+\lstdefinestyle{asmslide}{
+  backgroundcolor=\color{codebg},
+  commentstyle=\color{codegreen}\itshape,
+  basicstyle=\ttfamily\tiny,
+  breaklines=true,
+  numbers=none,
+  frame=single,
+  rulecolor=\color{gray!40},
+}
+\lstdefinestyle{smtslide}{
+  backgroundcolor=\color{codebg},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{codepurple}\bfseries,
+  basicstyle=\ttfamily\tiny,
+  breaklines=true,
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  numbersep=3pt,
+  frame=single,
+  rulecolor=\color{gray!40},
+  morekeywords={declare-fun,assert,check-sat,push,pop,not,and,or,Int},
+}
+
+% ── Macros ───────────────────────────────────────────────────────────────────
+\newcommand{\WP}[2]{\mathrm{WP}(#1,\,#2)}
+\newcommand{\hoare}[3]{\{#1\}\;#2\;\{#3\}}
+\newcommand{\subst}[3]{#1[#3/#2]}
+\newcommand{\reg}[1]{\texttt{\%#1}}
+
+% ── Footer ───────────────────────────────────────────────────────────────────
+\setbeamertemplate{footline}{%
+  \leavevmode
+  \hbox{%
+    \begin{beamercolorbox}[wd=.333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.334\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+      \usebeamerfont{date in head/foot}
+      \insertframenumber{} / \inserttotalframenumber\hspace*{1em}
+    \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\setbeamertemplate{navigation symbols}{}
+
+% ── Metadatos ────────────────────────────────────────────────────────────────
+\title[Compilador JavaSubset $\to$ x86-64]{%
+  Compilador \texttt{JavaSubset} $\rightarrow$ x86-64\\[0.3em]
+  {\large con Verificaci\'on Formal (Hoare + Z3)}}
+\subtitle{}
+\author{Jaime Hernández}
+\institute{Dise\~no de Compiladores}
+\date{\today}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Portada ─────────────────────────────────────────────────────────────────
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+% ─── Índice ──────────────────────────────────────────────────────────────────
+\begin{frame}{\'Indice}
+  \begin{multicols}{2}
+    \tableofcontents
+  \end{multicols}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Arquitectura general}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Pipeline del compilador}
+\centering
+\begin{tikzpicture}[
+  scale=0.78, transform shape,
+  box/.style={rectangle, draw, rounded corners=2pt,
+              minimum width=2.4cm, minimum height=0.55cm,
+              align=center, font=\scriptsize\ttfamily, fill=blue!10},
+  ver/.style={rectangle, draw, rounded corners=2pt,
+              minimum width=2.4cm, minimum height=0.55cm,
+              align=center, font=\scriptsize\ttfamily, fill=accent!15},
+  arr/.style={-Stealth, thick},
+  lbl/.style={font=\tiny\itshape, text=gray!80}
+]
+\node[box] (src) {Fuente .java};
+\node[box, below=0.35cm of src]  (lex) {Lexer (Flex)};
+\node[box, below=0.35cm of lex]  (par) {Parser (Bison)};
+\node[box, below=0.35cm of par]  (sem) {Sem\'antico};
+\node[box, below=0.35cm of sem]  (ir)  {Gen. IR};
+\node[box, below=0.35cm of ir]   (opt) {Optim. IR};
+\node[box, below=0.35cm of opt]  (reg) {Reg. Alloc};
+\node[box, below=0.35cm of reg]  (x86) {x86-64 Gen};
+\node[box, below=0.35cm of x86]  (asm) {Ensamblador .s};
+
+\draw[arr] (src)--(lex);
+\draw[arr] (lex)--(par) node[lbl,right,midway]{tokens};
+\draw[arr] (par)--(sem) node[lbl,right,midway]{AST};
+\draw[arr] (sem)--(ir)  node[lbl,right,midway]{tipos};
+\draw[arr] (ir)--(opt)  node[lbl,right,midway]{IR};
+\draw[arr] (opt)--(reg) node[lbl,right,midway]{IR opt.};
+\draw[arr] (reg)--(x86) node[lbl,right,midway]{RegMap};
+\draw[arr] (x86)--(asm) node[lbl,right,midway]{AT\&T};
+
+\node[ver, right=2.8cm of opt, align=center] (wpc) {VCGenerator\\WPCalculus};
+\node[ver, below=0.35cm of wpc, align=center] (smt) {SMTExporter\\(.smt2)};
+\node[ver, below=0.35cm of smt] (z3)  {Z3 Solver};
+
+\draw[arr, dashed, accent!80]
+  (sem) -| node[lbl,above,near end]{--verify} (wpc);
+\draw[arr, accent!80] (wpc)--(smt);
+\draw[arr, accent!80] (smt)--(z3);
+\end{tikzpicture}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Subconjunto Java soportado}
+\begin{columns}[t]
+  \column{0.48\textwidth}
+  \begin{block}{Construcci\'ones}
+    \begin{itemize}\small
+      \item Tipos: \texttt{int}, \texttt{double}, \texttt{boolean}
+      \item Variables locales + m\'etodos est\'aticos
+      \item Asignaci\'on, aritm\'etica, comparaci\'on
+      \item \texttt{if}/\texttt{else}, \texttt{while}
+      \item \texttt{return}, llamadas a m\'etodos
+      \item \texttt{System.out.println}
+    \end{itemize}
+  \end{block}
+
+  \column{0.52\textwidth}
+  \begin{alertblock}{Anotaciones de verificaci\'on (Fase 5)}
+    \begin{tabular}{ll}\small
+      \texttt{@pre expr}       & Precondici\'on \\
+      \texttt{@post expr}      & Postcondici\'on \\
+      \texttt{@invariant expr} & Invariante de bucle \\
+      \texttt{@variant expr}   & Terminaci\'on \\
+      \texttt{==>}             & Implicaci\'on \\
+      \texttt{result}          & Valor de retorno \\
+    \end{tabular}
+  \end{alertblock}
+  \begin{exampleblock}{Ejemplo}
+    \small\texttt{@pre\; true}\\
+    \texttt{@post result >= 0}\\
+    \texttt{public static int abs()\{...\}}
+  \end{exampleblock}
+\end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Front-end: L\'exico y Sint\'actico}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}[fragile]{Analizador l\'exico (Flex)}
+\begin{columns}[t]
+  \column{0.46\textwidth}
+  \begin{block}{Tokens principales}\small
+    \begin{description}
+      \item[\textbf{Reservadas}] exactas (\texttt{if, while, return,\ldots})
+      \item[\textbf{Identificadores}] \texttt{[a-zA-Z][a-zA-Z0-9]*}
+      \item[\textbf{Enteros}] \texttt{[0-9]+}
+      \item[\textbf{Reales}] \texttt{[0-9]+\textbackslash.[0-9]+}
+      \item[\textbf{Anotaciones}] \texttt{@pre}, \texttt{@post}, \texttt{@invariant}
+    \end{description}
+  \end{block}
+
+  \column{0.54\textwidth}
+  \begin{exampleblock}{Reglas especiales — Fase 5}
+\begin{lstlisting}[style=cppslide]
+"result"     { return RESULT_TK; }
+"@pre"       { return PRE_TK; }
+"@post"      { return POST_TK; }
+"@invariant" { return INV_TK; }
+"@variant"   { return VAR_TK; }
+"==>"        { return IMPLIES_TK; }
+/* debe ir antes de la regla de ID */
+[a-zA-Z]... { return ID_TK; }
+\end{lstlisting}
+  \end{exampleblock}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}[fragile]{Analizador sint\'actico (Bison LALR(1))}
+\begin{columns}[t]
+  \column{0.55\textwidth}
+\begin{lstlisting}[style=cppslide]
+Program : 'public' 'class' ID
+          '{' Members '}'
+
+Method  : 'public' 'static' Tipo
+          ID '(' ')' Block
+
+Instr : Asig | Return | If
+      | 'while' '(' Expr ')'
+        OptInv OptVar Block
+
+/* Anotaciones formales */
+OptPre  : '@pre'  Expr | /*empty*/
+OptPost : '@post' Expr | /*empty*/
+OptInv  : '@invariant' Expr | /*empty*/
+OptVar  : '@variant'   Expr | /*empty*/
+\end{lstlisting}
+
+  \column{0.45\textwidth}
+  \begin{block}{AST generado}
+    \centering\small
+    \begin{tikzpicture}[
+      n/.style={rectangle,draw,rounded corners,
+                font=\tiny\ttfamily,
+                minimum width=2cm,
+                minimum height=0.38cm,
+                fill=blue!8, align=center},
+      scale=0.9, transform shape
+    ]
+    \node[n] (prog) {ProgramNode};
+    \node[n, below left=0.45cm and 0.6cm of prog]  (m1) {MethodNode};
+    \node[n, below right=0.45cm and 0.4cm of prog] (m2) {MethodNode};
+    \node[n, below=0.45cm of m1] (blk) {BlockNode};
+    \node[n, below left=0.4cm and 0.1cm of blk]  (wh) {WhileNode};
+    \node[n, below right=0.4cm and 0.1cm of blk] (ret) {ReturnNode};
+    \draw[-Stealth] (prog)--(m1);
+    \draw[-Stealth] (prog)--(m2);
+    \draw[-Stealth] (m1)--(blk);
+    \draw[-Stealth] (blk)--(wh);
+    \draw[-Stealth] (blk)--(ret);
+    \end{tikzpicture}
+  \end{block}
+  \begin{exampleblock}{\small Patr\'on Visitor}
+    \texttt{SemanticVisitor}, \texttt{IRBuilder},\\
+    \texttt{ASTVisualizer} — todos implementan\\
+    la interfaz \texttt{Visitor} sin tocar el AST
+  \end{exampleblock}
+\end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{An\'alisis sem\'antico}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}[fragile]{Tabla de s\'imbolos y comprobaciones}
+\begin{columns}[t]
+  \column{0.5\textwidth}
+  \begin{block}{\texttt{TablaSimbolos}}
+\begin{lstlisting}[style=cppslide]
+struct Simbolo {
+  string nombre;
+  unsigned tipo;  // INT,REAL,BOOL
+  unsigned dir;   // stack offset
+  bool isConstant;
+  bool isFunction;
+  int  returnType;
+};
+class TablaSimbolos {
+  TablaSimbolos* padre; // scope
+  bool set(Simbolo s);
+  Simbolo* get(string n);
+};
+\end{lstlisting}
+  \end{block}
+
+  \column{0.5\textwidth}
+  \begin{block}{Comprobaciones}
+    \begin{enumerate}\small
+      \item Declaraci\'on antes de uso
+      \item Compatibilidad de tipos
+      \item No reasignaci\'on de \texttt{final}
+      \item Tipo de retorno correcto
+      \item C\'odigo inalcanzable
+      \item Llamadas a funciones v\'alidas
+    \end{enumerate}
+  \end{block}
+  \begin{exampleblock}{Coerci\'on de tipos}
+    \small
+    \texttt{int} op \texttt{double} $\Rightarrow$ \texttt{double}\\
+    \texttt{int} / \texttt{int} $\Rightarrow$ \texttt{int}
+  \end{exampleblock}
+\end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Representaci\'on Intermedia}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}[fragile]{Cuadruplas de tres direcciones}
+\begin{columns}[t]
+  \column{0.46\textwidth}
+  \begin{block}{Formato: $(op, arg_1, arg_2, res)$}\small
+    \begin{description}\itemsep0pt
+      \item[\texttt{IR\_ADD/SUB/MUL/DIV}] aritm\'etica
+      \item[\texttt{IR\_MOD / IR\_NEG}] m\'odulo, negaci\'on
+      \item[\texttt{IR\_COPY}] $x \leftarrow a$
+      \item[\texttt{IR\_JZ / IR\_JMP}] saltos condicional/incond.
+      \item[\texttt{IR\_LABEL}] etiqueta de destino
+      \item[\texttt{IR\_CALL}] $t \leftarrow f()$
+      \item[\texttt{IR\_RETURN}] devuelve valor
+    \end{description}
+  \end{block}
+
+  \column{0.54\textwidth}
+  \begin{exampleblock}{Ejemplo: while + suma}
+\begin{lstlisting}[style=asmslide]
+[FUNC_BEGIN] sumToFive
+[LABEL]  L0
+[LTE]    i 5    -> t0
+[JZ]     t0     -> L1
+[ADD]    s i    -> t1
+[COPY]   t1     -> s
+[ADD]    i 1    -> t2
+[COPY]   t2     -> i
+[JMP]    L0
+[LABEL]  L1
+[RETURN] s
+[FUNC_END] sumToFive
+\end{lstlisting}
+  \end{exampleblock}
+  \begin{block}{Optimizaciones ($-31\%$ instrucc.)}
+    \small
+    \textbf{1.} Elim. c\'odigo muerto \quad
+    \textbf{2.} Plegado constantes \quad
+    \textbf{3.} Prop. de copias
+  \end{block}
+\end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Backend x86-64}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}[fragile]{Generaci\'on de c\'odigo x86-64}
+\begin{columns}[t]
+  \column{0.5\textwidth}
+  \begin{block}{ABI System V AMD64}\small
+    \begin{description}\itemsep0pt
+      \item[Argumentos] \reg{rdi}, \reg{rsi}, \reg{rdx},\ldots\reg{r9}
+      \item[Retorno int] \reg{rax}
+      \item[Retorno float] \reg{xmm0}
+      \item[Caller-saved] \reg{rcx}, \reg{rdx}, \reg{r8}\ldots\reg{r11}
+    \end{description}
+  \end{block}
+\begin{lstlisting}[style=asmslide]
+; prologo / epilogo estandar
+pushq  %rbp
+movq   %rsp, %rbp
+subq   $N, %rsp   ; N % 16 == 0
+...
+movq   %rbp, %rsp
+popq   %rbp
+ret
+\end{lstlisting}
+
+  \column{0.5\textwidth}
+  \begin{exampleblock}{Bucle compilado}
+\begin{lstlisting}[style=asmslide]
+sumToFive:
+    pushq  %rbp
+    movq   %rsp, %rbp
+    subq   $48, %rsp
+L0:
+    movq   -8(%rbp), %rax  ; i
+    cmpq   $5, %rax
+    setle  %al
+    movzbq %al, %rax
+    movq   %rax, -24(%rbp) ; t0
+    testq  %rax, %rax
+    je     L1
+    ; s = s + i
+    movq  -16(%rbp), %rax
+    addq  -8(%rbp),  %rax
+    movq  %rax, -16(%rbp)
+    jmp   L0
+L1: movq  -16(%rbp), %rax
+    ...
+    ret
+\end{lstlisting}
+  \end{exampleblock}
+\end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Asignaci\'on de registros}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}[fragile]{Chaitin-Briggs: coloraci\'on de grafos ($K=6$)}
+\begin{columns}[t]
+  \column{0.55\textwidth}
+  \begin{block}{Tres fases}
+    \begin{enumerate}\small
+      \item \textbf{Vivacidad} (punto fijo)
+        \[ \text{live\_in}[B] = \text{use}[B] \cup (\text{live\_out}[B] \setminus \text{def}[B]) \]
+      \item \textbf{Grafo de interferencias}\\
+        Arista $(d,v)$ si $d$ se define con $v$ viva
+      \item \textbf{Coloraci\'on}
+        \begin{itemize}\small
+          \item \emph{Simplify}: apila nodos grado $<K$
+          \item \emph{Spill}: derrama el de mayor grado
+          \item \emph{Assign}: asigna colores al desapilar
+        \end{itemize}
+    \end{enumerate}
+  \end{block}
+
+  \column{0.45\textwidth}
+  \begin{block}{Registros disponibles}
+    \small
+    \begin{tabular}{ll}
+      Enteros: & \reg{rcx}, \reg{rdx}, \reg{r8}\\
+               & \reg{r9}, \reg{r10}, \reg{r11}\\
+      Floats:  & \reg{xmm2}\ldots\reg{xmm7}\\
+    \end{tabular}
+  \end{block}
+  \begin{exampleblock}{Resultado}
+\begin{lstlisting}[style=asmslide]
+$ ./compiler --reg-alloc t04.java
+  i  -> %rcx
+  s  -> %rdx
+  t0 -> %r8
+  t1 -> spill (-32(%rbp))
+\end{lstlisting}
+  \end{exampleblock}
+\end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Verificaci\'on formal}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{L\'ogica de Hoare y c\'alculo WP}
+\begin{columns}[t]
+  \column{0.48\textwidth}
+  \begin{block}{Tripleta de Hoare}
+    \[ \hoare{P}{S}{Q} \]
+    Si $P$ vale antes de $S$ y termina, $Q$ vale despu\'es.
+    \medskip
+
+    \textbf{Condici\'on principal:}
+    \[ P \Rightarrow \WP{\mathit{body}}{Q} \]
+    v\'alida $\iff$ Z3 dice \texttt{UNSAT} a $\neg\mathit{VC}$
+  \end{block}
+
+  \column{0.52\textwidth}
+  \begin{block}{Reglas del c\'alculo WP}
+    \begin{align*}
+      \WP{x:=e}{Q} &= \subst{Q}{x}{e}\\[3pt]
+      \WP{S_1;S_2}{Q} &= \WP{S_1}{\WP{S_2}{Q}}\\[3pt]
+      \WP{\texttt{ret}\;e}{Q} &= \subst{Q}{\texttt{result}}{e}\\[3pt]
+      \WP{\texttt{if}(B)\;S_1\;\texttt{else}\;S_2}{Q}
+        &= (B \Rightarrow \WP{S_1}{Q})\\
+        &\;\wedge (\neg B \Rightarrow \WP{S_2}{Q})
+    \end{align*}
+  \end{block}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}[fragile]{Implementaci\'on CPS para retornos anticipados}
+\begin{alertblock}{Problema con la regla na\"ive}
+Para \;\texttt{if(x<0) return -x; \; return x;}\; con $Q=\texttt{result}\geq 0$:
+la composici\'on inversa pierde \texttt{result} tras el primer \texttt{return}.
+\end{alertblock}
+
+\begin{exampleblock}{Soluci\'on: continuaciones (procesado hacia adelante)}
+\begin{lstlisting}[style=cppslide]
+Predicate* wpSeq(stmts, idx, Q) {
+    auto* s = stmts[idx];
+    // return: usa Q directamente -- ignora continuacion
+    if (auto* r = dyn_cast<ReturnNode>(s))
+        return wpReturn(r, Q);
+    // if: la continuacion se propaga a ambas ramas
+    if (auto* i = dyn_cast<IfNode>(s)) {
+        vector<StmtNode*> cont(stmts.begin()+idx+1, stmts.end());
+        return And(B ==> wpBranchAndCont(then, cont, Q),
+                  !B ==> wpBranchAndCont(else, cont, Q));
+    }
+    // assign: WP(x:=e; resto, Q) = WP(resto, Q)[e/x]
+    if (auto* a = dyn_cast<AssignNode>(s))
+        return wpAssign(a, wpSeq(stmts, idx+1, Q));
+    return wpSeq(stmts, idx+1, Q);
+}
+\end{lstlisting}
+\end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{VCs de bucles con invariante}
+Para \texttt{while($B$)\{$S$\}} con invariante $I$:
+
+\begin{columns}[t]
+  \column{0.5\textwidth}
+  \begin{block}{Tres condiciones de verificaci\'on}
+    \medskip
+    $\mathit{VC}_1$ \textbf{(iniciaci\'on)}:
+    \[ P \Rightarrow \WP{S_{\text{antes}}}{I} \]
+    $\mathit{VC}_2$ \textbf{(preservaci\'on)}:
+    \[ (I \wedge B) \Rightarrow \WP{S_{\text{body}}}{I} \]
+    $\mathit{VC}_3$ \textbf{(uso)}:
+    \[ (I \wedge \neg B) \Rightarrow \WP{S_{\text{desp}}}{Q} \]
+  \end{block}
+
+  \column{0.5\textwidth}
+  \begin{alertblock}{El invariante debe ser \emph{fuerte}}
+    Para la suma $s = 1+\cdots+i$:
+    \medskip
+
+    $I = s\geq 0$ \quad insuficiente:\\
+    \quad Z3 halla $(i=-1,\,s=0)$ que satisface $I\wedge B$\\
+    \quad pero $(s+i)=s-1<0$. \quad \textcolor{warn}{\textbf{Fallo.}}
+    \medskip
+
+    $I = s\geq 0 \;\wedge\; i\geq 1$ \quad correcto:
+    \[ (s\geq0 \wedge i\geq1 \wedge i\leq5) \Rightarrow (s+i)\geq0 \]
+    Z3: \texttt{UNSAT} \quad\textcolor{accent}{$\checkmark$}
+  \end{alertblock}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}[fragile]{SMT-Lib2 y Z3}
+\begin{columns}[t]
+  \column{0.55\textwidth}
+\begin{lstlisting}[style=smtslide]
+(push 1)
+; [absValue] correccion
+(declare-fun x () Int)
+(assert (not
+  (=> true
+    (and
+      (=> (< (- 5) 0)
+          (>= (- (- 5)) 0))
+      (=> (not (< (- 5) 0))
+          (>= (- 5) 0))
+    )
+  )
+))
+(check-sat)   ; --> unsat  [OK]
+(pop 1)
+\end{lstlisting}
+
+  \column{0.45\textwidth}
+  \begin{block}{Interpretaci\'on de Z3}\small
+    \begin{description}\itemsep2pt
+      \item[\texttt{unsat}] VC v\'alida \quad {\color{accent}\textbf{[OK]}}
+      \item[\texttt{sat}] Bug hallado \quad {\color{warn}\textbf{[BUG]}}
+      \item[\texttt{unknown}] Timeout \quad \textbf{[?]}
+    \end{description}
+  \end{block}
+  \begin{block}{Tipos de VC generadas}\small
+    \begin{enumerate}
+      \item Correcci\'on del m\'etodo
+      \item Iniciaci\'on del invariante
+      \item Preservaci\'on del invariante
+      \item Uso del invariante
+      \item Terminaci\'on (\texttt{@variant})
+      \item Seguridad: divisi\'on por cero
+    \end{enumerate}
+  \end{block}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}[fragile]{Demo: verificaci\'on completa}
+\begin{columns}[t]
+  \column{0.52\textwidth}
+\begin{lstlisting}[style=javaslide]
+@pre  true
+@post result >= 0
+public static int absValue() {
+    int x; x = -5;
+    if (x < 0) return -x;
+    return x;
+}
+
+@post result > 10          // BUG!
+public static int wrongMethod() {
+    int x; x = 5; return x;
+}
+
+@post result >= 0
+public static int sumLoop() {
+    int i; int s; i=1; s=0;
+    while (i <= 5)
+    @invariant s>=0 && i>=1
+    @variant   6 - i
+    { s=s+i; i=i+1; }
+    return s;
+}
+\end{lstlisting}
+
+  \column{0.48\textwidth}
+  \begin{exampleblock}{Salida del verificador}
+\begin{lstlisting}[style=asmslide]
+$ ./compiler --verify demo.java
+
+[OK]  absValue
+      correccion (unsat)
+
+[OK]  sumLoop
+      iniciacion (unsat)
+[OK]  sumLoop
+      preservacion (unsat)
+[OK]  sumLoop
+      uso (unsat)
+[OK]  sumLoop
+      correccion (unsat)
+[OK]  sumLoop
+      terminacion (unsat)
+
+[BUG] wrongMethod
+      correccion (sat) <-- bug!
+\end{lstlisting}
+  \end{exampleblock}
+  \bigskip
+  \centering\textbf{6 OK} $\;\cdot\;$ \textcolor{warn}{\textbf{1 BUG detectado}}
+\end{columns}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Pruebas y resultados}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Suite de pruebas: 11/11}
+\begin{columns}[t]
+  \column{0.33\textwidth}
+  \begin{block}{Backend (5)}
+    \begin{tabular}{ll}\small
+      t01\_print    & {\color{accent}\texttt{PASS}} \\
+      t02\_arith    & {\color{accent}\texttt{PASS}} \\
+      t03\_if\_else & {\color{accent}\texttt{PASS}} \\
+      t04\_while    & {\color{accent}\texttt{PASS}} \\
+      t05\_funcs    & {\color{accent}\texttt{PASS}} \\
+    \end{tabular}
+  \end{block}
+
+  \column{0.33\textwidth}
+  \begin{block}{Sem\'antico (3)}
+    \begin{tabular}{ll}\small
+      sem01\_undecl & {\color{accent}\texttt{PASS}} \\
+      sem02\_type   & {\color{accent}\texttt{PASS}} \\
+      sem03\_redecl & {\color{accent}\texttt{PASS}} \\
+    \end{tabular}
+  \end{block}
+
+  \column{0.34\textwidth}
+  \begin{block}{Verificaci\'on (3)}
+    \begin{tabular}{ll}\small
+      ver01\_simple & {\color{accent}\texttt{PASS}} \\
+      ver02\_inv    & {\color{accent}\texttt{PASS}} \\
+      demo\_verified & {\color{accent}\texttt{PASS}} \\
+    \end{tabular}
+  \end{block}
+\end{columns}
+
+\vspace{0.4cm}
+\begin{beamercolorbox}[rounded=true, center, wd=0.6\textwidth]{block title}
+  \centering\large\bfseries
+  \texttt{make \&\& tests/run\_tests.sh} $\Rightarrow$ \textbf{11 / 11 passed}
+\end{beamercolorbox}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Conclusiones}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Resumen de milestones}
+\begin{table}
+  \begin{tabular}{clll}
+    \hline
+    \textbf{Fase} & \textbf{Milestone} & \textbf{Componentes clave} & \\
+    \hline
+    1 & Front-end  & Flex + Bison, AST C++ & {\color{accent}$\checkmark$} \\
+    2 & Sem\'antico & \texttt{TablaSimbolos}, tipos, Visitor & {\color{accent}$\checkmark$} \\
+    3 & IR + Optim. & Cuadruplas, dead code, folding, copy & {\color{accent}$\checkmark$} \\
+    4 & Backend    & x86-64, ABI, Chaitin-Briggs & {\color{accent}$\checkmark$} \\
+    5 & Verificaci\'on & Hoare, WP-CPS, Z3, VCGenerator & {\color{accent}$\checkmark$} \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{columns}[t]
+  \column{0.5\textwidth}
+  \begin{block}{Aportaciones principales}
+    \begin{itemize}\small
+      \item Compilador completo end-to-end
+      \item WP con continuaciones (CPS) para retornos anticipados
+      \item VCs autom\'aticas: correcci\'on, invariantes, terminaci\'on
+      \item Integraci\'on Z3 con reporte coloreado
+    \end{itemize}
+  \end{block}
+
+  \column{0.5\textwidth}
+  \begin{alertblock}{Trabajo futuro}
+    \begin{itemize}\small
+      \item Inferencia autom\'atica de invariantes (Daikon)
+      \item Soporte de arrays y objetos
+      \item SSA form para optimizaci\'on avanzada
+      \item Backend LLVM-IR
+    \end{itemize}
+  \end{alertblock}
+\end{columns}
+\end{frame}
+
+% ─── Diapositiva final ────────────────────────────────────────────────────────
+\begin{frame}[plain]
+  \centering
+  \vspace{1.5cm}
+  {\Huge\bfseries\color{primary} Gracias}\\[0.8em]
+  {\large Compilador \texttt{JavaSubset} $\to$ x86-64}\\[0.4em]
+  {\normalsize con Verificaci\'on Formal mediante Hoare + Z3}\\[1.5em]
+  \hrule
+  \vspace{0.6em}
+  \begin{tabular}{rl}
+    \texttt{make \&\& tests/run\_tests.sh} & $\Rightarrow$ \textbf{11/11 passed}\\
+    \texttt{./compiler --verify demo.java} & $\Rightarrow$ \textbf{6 OK, 1 BUG}\\
+    \texttt{pdflatex presentation.tex}     & $\Rightarrow$ \textbf{estas diapositivas}\\
+  \end{tabular}
+\end{frame}
+
+\end{document}

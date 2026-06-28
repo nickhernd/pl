@@ -1,0 +1,138 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 8 – Asignación de Registros (Chaitin-Briggs)
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Asignación de registros: Chaitin-Briggs}
+\label{chap:registro}
+
+\section{Motivación}
+
+Los registros de la CPU son escasos y de acceso mucho más rápido que la memoria.
+La \emph{asignación de registros} consiste en asignar las variables y temporales
+de la \IR{} a registros físicos (o a posiciones en la pila si no hay
+registros suficientes: \emph{spilling}).
+
+El algoritmo de \textbf{Chaitin-Briggs}~\cite{chaitin1982} modela el
+problema como un \emph{problema de coloración de grafos}: dos variables
+que están \emph{vivas} en el mismo punto del programa no pueden compartir
+el mismo registro, y por tanto se conectan en el \emph{grafo de interferencias}.
+Colorear el grafo con $K$ colores equivale a asignar $K$ registros.
+
+\section{Registros disponibles}
+
+Se reservan los siguientes registros \emph{caller-saved} para temporales,
+evitando tener que salvarlos en llamadas a función:
+
+\begin{table}[H]
+  \centering
+  \caption{Registros asignables por el compilador}
+  \label{tab:regs}
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Clase} & \textbf{Registros} ($K = 6$) \\
+    \midrule
+    Enteros  & \reg{rcx}, \reg{rdx}, \reg{r8}, \reg{r9}, \reg{r10}, \reg{r11} \\
+    Flotantes & \reg{xmm2}, \reg{xmm3}, \reg{xmm4}, \reg{xmm5}, \reg{xmm6}, \reg{xmm7} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Algoritmo}
+
+El algoritmo consta de tres fases:
+
+\subsection{Fase 1: Análisis de vivacidad}
+
+Se calculan los conjuntos \emph{use} y \emph{def} por bloque básico y
+se resuelven las ecuaciones de punto fijo:
+\[
+  \text{live\_in}[B]  = \text{use}[B]  \cup (\text{live\_out}[B] \setminus \text{def}[B])
+\]
+\[
+  \text{live\_out}[B] = \bigcup_{S \in \text{succ}(B)} \text{live\_in}[S]
+\]
+
+\begin{lstlisting}[style=pseudo, caption={Análisis de vivacidad (punto fijo)}]
+Entrada: bloques B_1,...,B_n con conjuntos use[B], def[B]
+Salida:  live_in[B], live_out[B] para cada bloque
+
+repetir hasta que no haya cambios:
+    para cada bloque B (en orden inverso):
+        live_out[B] = union{ live_in[S] | S sucesor de B }
+        live_in[B]  = use[B] union (live_out[B] menos def[B])
+\end{lstlisting}
+
+\subsection{Fase 2: Grafo de interferencias}
+
+Se recorre cada bloque básico de forma inversa manteniendo el conjunto
+$\text{live}$ de variables vivas en el punto actual. Al definir una
+variable $d$ se añade una arista $(d, v)$ para cada $v \in \text{live}$.
+
+\begin{lstlisting}[style=cpp, caption={Construcción del grafo de interferencias}]
+for (auto it = block.rbegin(); it != block.rend(); ++it) {
+    const auto& q = *it;
+    if (q.result.kind == IRArg::TEMP || q.result.kind == IRArg::VAR) {
+        int d = q.result.addr;
+        for (int live_var : live)
+            graph.addEdge(d, live_var);  // d interfiere con live_var
+        live.erase(d);                   // d deja de estar vivo antes de def
+    }
+    // Add uses to live set
+    if (q.arg1 es variable/temporal) live.insert(q.arg1.addr);
+    if (q.arg2 es variable/temporal) live.insert(q.arg2.addr);
+}
+\end{lstlisting}
+
+\subsection{Fase 3: Coloración del grafo}
+
+Se sigue el algoritmo \emph{simplify}:
+
+\begin{enumerate}
+  \item Mientras exista un nodo con grado $< K$: apilarlo y eliminarlo del grafo.
+  \item Si todos los nodos tienen grado $\geq K$: elegir el de mayor grado para
+    \emph{spill} y eliminarlo (se marca como derramado).
+  \item Repetir hasta vaciar el grafo.
+  \item Desapilar asignando colores (registros) no usados por vecinos ya coloreados.
+\end{enumerate}
+
+\begin{lstlisting}[style=cpp, caption={Coloración simplificada de Chaitin-Briggs}]
+// Fase simplify: apila nodos con grado < K
+stack<int> nodeStack;
+while (!worklist.empty()) {
+    auto it = find_if(worklist, [&](int n){ return degree[n] < K; });
+    if (it != worklist.end()) {
+        nodeStack.push(*it);
+        removeNode(*it);
+    } else {
+        // spill: eliminar nodo de mayor grado
+        int spill = *max_element(worklist, [&](int a, int b){
+            return degree[a] < degree[b]; });
+        spilledNodes.insert(spill);
+        removeNode(spill);
+    }
+}
+// Fase assign: asignar colores
+while (!nodeStack.empty()) {
+    int n = nodeStack.top(); nodeStack.pop();
+    set<string> usedColors;
+    for (int neighbor : adj[n])
+        if (color.count(neighbor)) usedColors.insert(color[neighbor]);
+    for (const auto& reg : AVAILABLE_REGS)
+        if (!usedColors.count(reg)) { color[n] = reg; break; }
+}
+\end{lstlisting}
+
+\section{Uso del resultado}
+
+El mapa de coloración \texttt{RegMap} (dirección IR → nombre de registro)
+se pasa al \texttt{X86Generator}. Las variables con \texttt{color = ""}
+(derramadas) se mantienen en la pila y se acceden con la notación
+\texttt{-N(\%rbp)}.
+
+\begin{verbatim}
+$ ./compiler --reg-alloc tests/backend/t04_while.java 2>&1
+=== Asignacion de Registros ===
+  addr 1 (i) -> %rcx
+  addr 2 (s) -> %rdx
+  addr 3 (t0) -> %r8
+  addr 4 (t1) -> spill
+\end{verbatim}

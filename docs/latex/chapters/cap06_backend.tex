@@ -1,0 +1,168 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 6 – Backend x86-64
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Backend x86-64}
+\label{chap:backend}
+
+\section{Convención de llamada System V AMD64 ABI}
+
+El compilador respeta la convención de llamada estándar de Linux/macOS
+para x86-64 (\emph{System V AMD64 ABI}):
+
+\begin{table}[H]
+  \centering
+  \caption{Registros de la System V AMD64 ABI}
+  \label{tab:abi}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Propósito}     & \textbf{Enteros}   & \textbf{Flotantes} \\
+    \midrule
+    Argumentos             & \reg{rdi}, \reg{rsi}, \reg{rdx}, \reg{rcx}, \reg{r8}, \reg{r9}
+                           & \reg{xmm0}–\reg{xmm7} \\
+    Valor de retorno       & \reg{rax}           & \reg{xmm0} \\
+    Callee-saved           & \reg{rbx}, \reg{r12}–\reg{r15}, \reg{rbp} & \reg{xmm8}–\reg{xmm15} \\
+    Caller-saved           & \reg{rcx}, \reg{rdx}, \reg{rsi}, \reg{rdi}, \reg{r8}–\reg{r11}
+                           & \reg{xmm0}–\reg{xmm7} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Marco de pila}
+
+Cada función establece su propio marco de pila siguiendo el
+prólogo/epílogo estándar:
+
+\begin{lstlisting}[style=asm, caption={Prólogo y epílogo de función}]
+    pushq   %rbp
+    movq    %rsp, %rbp
+    subq    $N, %rsp        # N = frameSize (alineado a 16 bytes)
+    ...
+    movq    %rbp, %rsp
+    popq    %rbp
+    ret
+\end{lstlisting}
+
+Las variables locales y temporales se ubican en la pila según la fórmula:
+\[
+  \texttt{slot}(v) = -((\text{slot}_v + 1) \times 8)\texttt{(\%rbp)}
+\]
+donde $\text{slot}_v$ es el índice (0-based) asignado a la primera vez
+que se usa la dirección de la variable en la IR.
+
+\section{Generación de código por opcode}
+
+\subsection{Operaciones aritméticas enteras}
+
+\begin{table}[H]
+  \centering
+  \caption{Traducción de operaciones aritméticas enteras}
+  \label{tab:arith}
+  \begin{tabular}{lp{8cm}}
+    \toprule
+    \textbf{IR}     & \textbf{Secuencia x86-64 AT\&T} \\
+    \midrule
+    $t \leftarrow a + b$ &
+      \texttt{movq mem(a), \%rax; addq mem(b), \%rax; movq \%rax, mem(t)} \\
+    $t \leftarrow a * b$ &
+      \texttt{movq mem(a), \%rax; imulq mem(b); movq \%rax, mem(t)} \\
+    $t \leftarrow a / b$ &
+      \texttt{movq mem(a), \%rax; cqto; idivq mem(b); movq \%rax, mem(t)} \\
+    $t \leftarrow a \% b$ &
+      \texttt{movq mem(a), \%rax; cqto; idivq mem(b); movq \%rdx, mem(t)} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Saltos condicionales}
+
+Los saltos se implementan con el par \texttt{cmpq} + instrucción de salto
+condicional. Para comparaciones que producen un booleano en la IR (p.ej.
+\texttt{IR\_LT}), el patrón es:
+
+\begin{lstlisting}[style=asm, caption={Comparación IR\_LT y salto condicional}]
+    movq    mem(a), %rax
+    cmpq    mem(b), %rax
+    setl    %al              # 1 si a < b, 0 si no
+    movzbq  %al, %rax
+    movq    %rax, mem(t)
+    ...
+    testq   mem(cond), mem(cond)
+    je      L_else           # JZ: salta si cond == 0
+\end{lstlisting}
+
+\subsection{Llamadas a función}
+
+\begin{lstlisting}[style=asm, caption={Llamada a función y recogida de valor de retorno}]
+    call    absValue         # llama a absValue()
+    movq    %rax, mem(t)    # t = valor de retorno (%rax)
+\end{lstlisting}
+
+\subsection{E/S con \texttt{printf} y \texttt{scanf}}
+
+\begin{lstlisting}[style=asm, caption={Impresión de entero con printf}]
+    .section .rodata
+fmt_int:    .string "%ld\n"
+    .text
+    leaq    fmt_int(%rip), %rdi
+    movq    mem(val), %rsi
+    xorl    %eax, %eax
+    call    printf@PLT
+\end{lstlisting}
+
+\begin{lstlisting}[style=asm, caption={Lectura de entero con scanf}]
+fmt_scanf_int: .string "%ld"
+    leaq    fmt_scanf_int(%rip), %rdi
+    leaq    mem(t)(%rbp), %rsi       # address of local variable in stack
+    xorl    %eax, %eax
+    call    scanf@PLT
+\end{lstlisting}
+
+\section{Ejemplo completo de programa compilado}
+
+\begin{lstlisting}[style=java, caption={Programa fuente: suma hasta 5}]
+public class TestWhile {
+    public static int sumToFive() {
+        int i; int s;
+        i = 1; s = 0;
+        while (i <= 5) { s = s + i; i = i + 1; }
+        return s;
+    }
+    public static void main(String[] args) {
+        int val;
+        val = sumToFive();
+        System.out.println(val);
+    }
+}
+\end{lstlisting}
+
+El ensamblador generado para \texttt{sumToFive} tiene la forma:
+
+\begin{lstlisting}[style=asm, caption={Ensamblador x86-64 generado para sumToFive}]
+    .globl  sumToFive
+sumToFive:
+    pushq   %rbp
+    movq    %rsp, %rbp
+    subq    $48, %rsp
+L0:
+    movq    -8(%rbp), %rax      # i
+    cmpq    $5, %rax
+    setle   %al
+    movzbq  %al, %rax
+    movq    %rax, -24(%rbp)     # t0 = i <= 5
+    testq   -24(%rbp), %rax
+    je      L1
+    movq    -8(%rbp), %rax      # s = s + i
+    addq    -16(%rbp), %rax
+    movq    %rax, -32(%rbp)
+    movq    -32(%rbp), %rax
+    movq    %rax, -16(%rbp)
+    movq    -8(%rbp), %rax      # i = i + 1
+    addq    $1, %rax
+    ...
+    jmp     L0
+L1:
+    movq    -16(%rbp), %rax     # return s
+    movq    %rbp, %rsp
+    popq    %rbp
+    ret
+\end{lstlisting}

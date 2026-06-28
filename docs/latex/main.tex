@@ -1,0 +1,90 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  main.tex  –  Documento raíz
+%  Compilar: pdflatex main.tex  (×2)  +  bibtex main  +  pdflatex main.tex (×2)
+% ─────────────────────────────────────────────────────────────────────────────
+\documentclass[12pt,a4paper,twoside,openright]{report}
+
+\input{preamble}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Portada ──────────────────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+
+  {\LARGE\bfseries Compilador \texttt{JavaSubset} $\rightarrow$ x86-64}\\[0.5em]
+  {\large con Verificación Formal mediante Lógica de Hoare y Z3}
+
+  \vspace{2cm}
+  \rule{\textwidth}{0.5pt}
+  \vspace{0.5cm}
+
+  {\large\itshape Documentación Técnica del Proyecto}\\[0.3em]
+  {\normalsize Diseño de Compiladores — Fases 1 a 5}
+
+  \vspace{0.5cm}
+  \rule{\textwidth}{0.5pt}
+
+  \vfill
+
+  \begin{tabular}{rl}
+    \textbf{Autor:}      & nickhernd \\[0.3em]
+    \textbf{Repositorio:} & \url{https://github.com/nickhernd/pl} \\[0.3em]
+    \textbf{Lenguaje:}   & C++11 (Flex + Bison) \\[0.3em]
+    \textbf{Herramientas:} & GCC, Z3 SMT Solver \\[0.3em]
+    \textbf{Fecha:}      & \today \\
+  \end{tabular}
+
+  \vspace{2cm}
+\end{titlepage}
+
+% ── Resumen ──────────────────────────────────────────────────────────────────
+\begin{abstract}
+\noindent
+Este documento describe el diseño e implementación de un compilador completo
+para un subconjunto de Java con destino nativo x86-64. El compilador abarca
+cinco milestones: análisis léxico-sintáctico con Flex y Bison, análisis
+semántico con tablas de símbolos y verificación de tipos, generación de código
+intermedio en formato de cuádruplas de tres direcciones, backend x86-64 con
+generación de ensamblador AT\&T y asignación de registros mediante el
+algoritmo de coloración de grafos de Chaitin-Briggs, y finalmente un módulo
+de verificación formal basado en la Lógica de Hoare y el Cálculo de
+Precondiciones Más Débiles (\emph{Weakest Precondition}, WP) con exportación
+a formato SMT-Lib2 para el solver Z3.
+
+El compilador es capaz de procesar programas Java anotados con especificaciones
+formales (\texttt{@pre}, \texttt{@post}, \texttt{@invariant}, \texttt{@variant})
+y generar automáticamente condiciones de verificación cuya validez es comprobada
+por Z3, detectando así tanto corrección de programas como errores de
+division por cero y no terminación.
+\end{abstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\lstlistoflistings
+
+% ── Capítulos ─────────────────────────────────────────────────────────────────
+\input{chapters/cap01_introduccion}
+\input{chapters/cap02_arquitectura}
+\input{chapters/cap03_frontend}
+\input{chapters/cap04_semantica}
+\input{chapters/cap05_ir}
+\input{chapters/cap06_backend}
+\input{chapters/cap07_optimizacion}
+\input{chapters/cap08_registro}
+\input{chapters/cap09_verificacion}
+\input{chapters/cap10_pruebas}
+
+% ── Apéndices ────────────────────────────────────────────────────────────────
+\appendix
+\input{apendices/apA_gramatica}
+\input{apendices/apB_instrucciones}
+
+% ── Bibliografía ─────────────────────────────────────────────────────────────
+\bibliographystyle{plain}
+\bibliography{referencias}
+
+\end{document}

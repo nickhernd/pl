@@ -1,0 +1,19 @@
+\begin{thebibliography}{1}
+
+\bibitem{chaitin1982}
+Gregory~J. Chaitin, Marc~A. Auslander, Ashok~K. Chandra, John Cocke, Martin~E.
+  Hopkins, and Peter~W. Markstein.
+\newblock Register allocation via coloring.
+\newblock {\em Computer Languages}, 6(1):47--57, 1981.
+
+\bibitem{dijkstra1976}
+Edsger~W. Dijkstra.
+\newblock {\em A Discipline of Programming}.
+\newblock Prentice-Hall, 1976.
+
+\bibitem{hoare1969}
+C.~A.~R. Hoare.
+\newblock An axiomatic basis for computer programming.
+\newblock {\em Communications of the ACM}, 12(10):576--580, 1969.
+
+\end{thebibliography}

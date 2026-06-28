@@ -1,0 +1,10 @@
+\babel@toc {spanish}{}\relax 
+\beamer@sectionintoc {1}{Arquitectura general}{3}{0}{1}
+\beamer@sectionintoc {2}{Front-end: L\'exico y Sint\'actico}{5}{0}{2}
+\beamer@sectionintoc {3}{An\'alisis sem\'antico}{7}{0}{3}
+\beamer@sectionintoc {4}{Representaci\'on Intermedia}{8}{0}{4}
+\beamer@sectionintoc {5}{Backend x86-64}{9}{0}{5}
+\beamer@sectionintoc {6}{Asignaci\'on de registros}{10}{0}{6}
+\beamer@sectionintoc {7}{Verificaci\'on formal}{11}{0}{7}
+\beamer@sectionintoc {8}{Pruebas y resultados}{16}{0}{8}
+\beamer@sectionintoc {9}{Conclusiones}{17}{0}{9}

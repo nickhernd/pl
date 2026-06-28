@@ -1,0 +1,54 @@
+\frametitle{Demo: verificaci\'on completa}
+\begin{columns}[t]
+  \column{0.52\textwidth}
+\begin{lstlisting}[style=javaslide]
+@pre  true
+@post result >= 0
+public static int absValue() {
+    int x; x = -5;
+    if (x < 0) return -x;
+    return x;
+}
+
+@post result > 10          // BUG!
+public static int wrongMethod() {
+    int x; x = 5; return x;
+}
+
+@post result >= 0
+public static int sumLoop() {
+    int i; int s; i=1; s=0;
+    while (i <= 5)
+    @invariant s>=0 && i>=1
+    @variant   6 - i
+    { s=s+i; i=i+1; }
+    return s;
+}
+\end{lstlisting}
+
+  \column{0.48\textwidth}
+  \begin{exampleblock}{Salida del verificador}
+\begin{lstlisting}[style=asmslide]
+$ ./compiler --verify demo.java
+
+[OK]  absValue
+      correccion (unsat)
+
+[OK]  sumLoop
+      iniciacion (unsat)
+[OK]  sumLoop
+      preservacion (unsat)
+[OK]  sumLoop
+      uso (unsat)
+[OK]  sumLoop
+      correccion (unsat)
+[OK]  sumLoop
+      terminacion (unsat)
+
+[BUG] wrongMethod
+      correccion (sat) <-- bug!
+\end{lstlisting}
+  \end{exampleblock}
+  \bigskip
+  \centering\textbf{6 OK} $\;\cdot\;$ \textcolor{warn}{\textbf{1 BUG detectado}}
+\end{columns}

@@ -1,0 +1,37 @@
+\babel@toc {spanish}{}\relax 
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces Características del subconjunto Java soportado}}{13}{table.caption.5}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Flags del compilador y su efecto}}{17}{table.caption.7}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Categor\'ias de tokens reconocidas por el lexer}}{19}{table.caption.9}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Tabla de coerción de tipos para operaciones binarias}}{24}{table.caption.11}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Opcodes de la representación intermedia}}{25}{table.caption.12}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Registros de la System V AMD64 ABI}}{29}{table.caption.13}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Traducción de operaciones aritméticas enteras}}{30}{table.caption.14}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {7.1}{\ignorespaces Operaciones que admiten plegado de constantes}}{34}{table.caption.15}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Reducción de cuádruplas en los programas de prueba}}{34}{table.caption.16}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {8.1}{\ignorespaces Registros asignables por el compilador}}{35}{table.caption.17}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {9.1}{\ignorespaces Clases de predicados implementadas}}{41}{table.caption.19}%
+\contentsline {table}{\numberline {9.2}{\ignorespaces Interpretación de la respuesta de Z3}}{43}{table.caption.20}%
+\contentsline {table}{\numberline {9.3}{\ignorespaces VCs generadas para \texttt {sumLoop} y resultados de Z3}}{44}{table.caption.21}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {10.1}{\ignorespaces Grupos de pruebas}}{45}{table.caption.22}%
+\contentsline {table}{\numberline {10.2}{\ignorespaces Pruebas de backend (compilación y ejecución)}}{45}{table.caption.23}%
+\contentsline {table}{\numberline {10.3}{\ignorespaces Pruebas de errores semánticos}}{46}{table.caption.24}%
+\contentsline {table}{\numberline {10.4}{\ignorespaces Pruebas de verificación con Z3}}{46}{table.caption.25}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {A.1}{\ignorespaces Precedencia (mayor nivel = mayor prioridad)}}{51}{table.caption.26}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {B.1}{\ignorespaces Instrucciones de movimiento}}{53}{table.caption.27}%
+\contentsline {table}{\numberline {B.2}{\ignorespaces Aritmética entera (64 bits)}}{53}{table.caption.28}%
+\contentsline {table}{\numberline {B.3}{\ignorespaces Comparación y saltos}}{54}{table.caption.29}%
+\contentsline {table}{\numberline {B.4}{\ignorespaces Llamadas a función y retorno}}{54}{table.caption.30}%
+\contentsline {table}{\numberline {B.5}{\ignorespaces Instrucciones SSE2 para \texttt {double}}}{55}{table.caption.31}%
+\contentsline {table}{\numberline {B.6}{\ignorespaces Directivas GAS usadas por el compilador}}{55}{table.caption.32}%

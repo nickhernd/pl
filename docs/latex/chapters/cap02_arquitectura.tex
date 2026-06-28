@@ -1,0 +1,161 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 2 – Arquitectura del compilador
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Arquitectura del compilador}
+\label{chap:arquitectura}
+
+\section{Vista global del pipeline}
+
+El compilador sigue la arquitectura clásica en fases consecutivas. Cada fase
+transforma una representación del programa en otra de mayor nivel de abstracción
+hacia la máquina destino, o bien extrae información (tabla de símbolos, tipos)
+que se usa en fases posteriores.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm and 1.8cm,
+  box/.style={rectangle, draw, rounded corners=3pt,
+              minimum width=3.8cm, minimum height=0.8cm,
+              align=center, font=\small\ttfamily, fill=blue!8},
+  arr/.style={-Stealth, thick},
+  lbl/.style={font=\scriptsize\itshape, text=gray}
+]
+
+\node[box] (src)    {Fuente .java};
+\node[box, below=of src]  (lex)    {Analizador Lexico\\(lexer.l)};
+\node[box, below=of lex]  (par)    {Analizador Sintactico\\(parser.y)};
+\node[box, below=of par]  (sem)    {Analizador Semantico\\(SemanticVisitor)};
+\node[box, below=of sem]  (ir)     {Generacion de RI\\(IRBuilder)};
+\node[box, below=of ir]   (opt)    {Optimizacion RI\\(IROptimizer)};
+\node[box, below=of opt]  (reg)    {Asig. de Registros\\(RegisterAllocator)};
+\node[box, below=of reg]  (x86)    {Generacion x86-64\\(X86Generator)};
+\node[box, below=of x86]  (asm)    {Ensamblador .s};
+
+\draw[arr] (src) -- (lex)
+  node[lbl, right, midway] {codigo fuente};
+\draw[arr] (lex) -- (par)
+  node[lbl, right, midway] {tokens};
+\draw[arr] (par) -- (sem)
+  node[lbl, right, midway] {AST};
+\draw[arr] (sem) -- (ir)
+  node[lbl, right, midway] {AST tipado};
+\draw[arr] (ir) -- (opt)
+  node[lbl, right, midway] {cuadruplas IR};
+\draw[arr] (opt) -- (reg)
+  node[lbl, right, midway] {IR optimizado};
+\draw[arr] (reg) -- (x86)
+  node[lbl, right, midway] {RegMap};
+\draw[arr] (x86) -- (asm)
+  node[lbl, right, midway] {AT\&T asm};
+
+% Rama de verificacion
+\node[box, right=2.5cm of opt, fill=green!8, align=center]
+  (wpgen)  {VCGenerator\\WPCalculus};
+\node[box, below=0.6cm of wpgen, fill=green!8, align=center]
+  (smt)    {SMTExporter\\(.smt2)};
+\node[box, below=0.6cm of smt, fill=green!8]
+  (z3)     {Z3 Solver};
+
+\draw[arr, dashed, green!60!black]
+  (sem) -| node[lbl, above, midway] {--verify} (wpgen);
+\draw[arr, green!60!black] (wpgen) -- (smt);
+\draw[arr, green!60!black] (smt) -- (z3);
+
+\end{tikzpicture}
+\caption{Pipeline completo del compilador JavaSubset. La rama verde
+  (verificacion formal) se activa con la opcion \texttt{--verify}.}
+\label{fig:pipeline}
+\end{figure}
+
+\section{Representaciones intermedias}
+
+A lo largo del pipeline el programa adopta cuatro representaciones distintas:
+
+\begin{enumerate}
+  \item \textbf{Codigo fuente}: texto Java con posibles anotaciones formales.
+  \item \textbf{AST} (\emph{Abstract Syntax Tree}): arbol de nodos tipados,
+    jerarquia de clases C++ visitables mediante el patron \emph{Visitor}.
+  \item \textbf{Cuadruplas IR}: secuencia plana de instrucciones de la forma
+    $(op, \mathit{arg}_1, \mathit{arg}_2, \mathit{res})$, independiente de la
+    arquitectura.
+  \item \textbf{Ensamblador x86-64}: instrucciones AT\&T con registros reales
+    o con posiciones en la pila.
+\end{enumerate}
+
+\section{Modos de operacion}
+
+El compilador admite tres modos de operacion seleccionables mediante flags:
+
+\begin{table}[H]
+  \centering
+  \caption{Flags del compilador y su efecto}
+  \label{tab:flags}
+  \begin{tabular}{llp{7cm}}
+    \toprule
+    \textbf{Flag}        & \textbf{Salida}   & \textbf{Descripcion} \\
+    \midrule
+    (ninguno)            & \texttt{prog.s}   & Compilacion estandar a ensamblador \\
+    \texttt{--ir}        & \texttt{stderr}   & Imprime cuadruplas IR y forma lineal \\
+    \texttt{--reg-alloc} & \texttt{stderr}   & Imprime mapa de asignacion de registros \\
+    \texttt{--verify}    & \texttt{prog.smt2}& Verificacion formal con Z3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Patron Visitor}
+
+Todas las fases que procesan el AST utilizan el patron de diseno
+\textbf{Visitor} (GoF). La interfaz abstracta \texttt{Visitor} declara un
+metodo \texttt{visit()} para cada tipo de nodo del AST; cada fase
+implementa esta interfaz sin modificar las clases del arbol.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  iface/.style={rectangle, draw, fill=yellow!15,
+                minimum width=4cm, minimum height=0.7cm,
+                align=center, font=\small},
+  impl/.style={rectangle, draw, fill=blue!8,
+               minimum width=3.5cm, minimum height=0.7cm,
+               align=center, font=\small},
+  arr/.style={-Stealth, thick}
+]
+\node[iface] (v) {\texttt{Visitor} (abstract)};
+\node[impl, below left=1cm and 2.5cm of v] (sv) {\texttt{SemanticVisitor}};
+\node[impl, below left=1cm and 0cm of v]   (ib) {\texttt{IRBuilder}};
+\node[impl, below right=1cm and 0cm of v]  (av) {\texttt{ASTVisualizer}};
+\node[impl, below right=1cm and 2.5cm of v] (dv) {\texttt{DOTVisualizer}};
+
+\draw[arr] (sv) -- (v);
+\draw[arr] (ib) -- (v);
+\draw[arr] (av) -- (v);
+\draw[arr] (dv) -- (v);
+\end{tikzpicture}
+\caption{Jerarquia del patron Visitor en el compilador.}
+\label{fig:visitor}
+\end{figure}
+
+\section{Estructura de directorios}
+
+\begin{lstlisting}[style=pseudo, caption={Organizacion del repositorio}]
+.
+|-- include/         Cabeceras: ASTNodes.h, IR.h, Predicate.h, ...
+|-- src/             Implementaciones: lexer.l, parser.y, *Visitor.h, ...
+|   |-- lexer.l           Analizador lexico (Flex)
+|   |-- parser.y          Gramatica + acciones semanticas (Bison)
+|   |-- SemanticVisitor.h Comprobacion de tipos
+|   |-- IRBuilder.h       Traduccion AST -> IR
+|   |-- IROptimizer.h     Optimizaciones sobre IR
+|   |-- RegisterAllocator.h  Chaitin-Briggs coloring
+|   |-- X86Generator.h    Generacion de codigo x86-64
+|   |-- WPCalculus.h      Calculo de precondicion mas debil
+|   |-- VCGenerator.h     Generacion de condiciones de verificacion
+|   `-- SMTExporter.h     Exportacion a SMT-Lib2 y ejecucion de Z3
+|-- tests/
+|   |-- backend/          Programas de prueba end-to-end
+|   |-- semantic/         Pruebas de deteccion de errores
+|   |-- verification/     Demos de verificacion formal
+|   `-- run_tests.sh      Script de pruebas
+`-- Makefile
+\end{lstlisting}

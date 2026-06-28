@@ -1,0 +1,177 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 3 – Frontend: Análisis léxico-sintáctico y AST
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Frontend: An\'alisis l\'exico-sint\'actico}
+\label{chap:frontend}
+
+\section{An\'alisis l\'exico}
+
+El analizador l\'exico se implementa en \texttt{src/lexer.l} mediante Flex.
+Convierte el flujo de caracteres de entrada en una secuencia de \emph{tokens}
+que el parser consumir\'a.
+
+\subsection{Categor\'ias de tokens}
+
+\begin{table}[H]
+  \centering
+  \caption{Categor\'ias de tokens reconocidas por el lexer}
+  \label{tab:tokens}
+  \begin{tabular}{llp{6cm}}
+    \toprule
+    \textbf{Categor\'ia} & \textbf{Patr\'on} & \textbf{Ejemplos} \\
+    \midrule
+    Palabras reservadas & exactas       & \texttt{int}, \texttt{while}, \texttt{return} \\
+    Tipos               & exactas       & \texttt{int}, \texttt{double}, \texttt{boolean} \\
+    Anotaciones formales& exactas       & \texttt{@pre}, \texttt{@post}, \texttt{@invariant} \\
+    Identificadores     & \texttt{[a-zA-Z][a-zA-Z0-9]*} & \texttt{x}, \texttt{sum}, \texttt{absValue} \\
+    Literales enteros   & \texttt{[0-9]+}               & \texttt{0}, \texttt{42} \\
+    Literales reales    & \texttt{[0-9]+\textbackslash.[0-9]+} & \texttt{3.14} \\
+    Operadores          & s\'imbolos    & \texttt{+}, \texttt{-}, \texttt{==}, \texttt{==>} \\
+    Puntuaci\'on        & s\'imbolos    & \texttt{\{}, \texttt{;}, \texttt{(} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Tokens especiales para verificaci\'on}
+
+Para la fase 5 se a\~nadieron tokens dedicados a las anotaciones de
+especificaci\'on formal, colocados \emph{antes} de la regla general de
+identificadores para que tengan precedencia:
+
+\begin{lstlisting}[style=cpp, caption={Reglas l\'exicas para anotaciones formales}]
+"result"      { RET_ATTR(result_token); }
+"@pre"        { RET_ATTR(pre_token); }
+"@post"       { RET_ATTR(post_token); }
+"@invariant"  { RET_ATTR(invariant_token); }
+"@variant"    { RET_ATTR(variant_token); }
+"==>"         { RET_ATTR(implies_token); }
+\end{lstlisting}
+
+\section{An\'alisis sint\'actico}
+
+El parser se implementa en \texttt{src/parser.y} con GNU Bison (gram\'atica
+LALR(1)). Construye el AST de forma dirigida por la sintaxis mediante
+acciones sem\'anticas en C++.
+
+\subsection{Estructura gramatical principal}
+
+\begin{lstlisting}[style=pseudo, caption={Reglas principales de la gram\'atica Bison}]
+// Un programa es una clase con miembros
+Program : public class id '(' ')' '{' Members '}'
+Members : Members Member | Members OptPre | Members OptPost | /* empty */
+Member  : Main | Method | DVar
+
+// Metodo estatico sin parametros
+Method  : public static Tipo id '(' ')' Bloque
+        | public static void id '(' ')' Bloque
+
+// Instrucciones
+Instr   : DVar | Asig | Print | Return
+        | if '(' Expr ')' Instr
+        | if '(' Expr ')' Instr else Instr
+        | while '(' Expr ')' OptInvariant OptVariant Instr
+        | Bloque
+
+// Anotaciones de especificacion formal
+OptPre      : '@pre'       PredExpr | /* empty */
+OptPost     : '@post'      PredExpr | /* empty */
+OptInvariant: '@invariant' PredExpr | /* empty */
+OptVariant  : '@variant'   PredExpr | /* empty */
+PredExpr    : Expr '==>' Expr | Expr
+\end{lstlisting}
+
+\subsection{Gesti\'on de anotaciones formales}
+
+Las anotaciones \texttt{@pre}/\texttt{@post} se acumulan en variables globales
+\texttt{g\_pre} y \texttt{g\_post} antes de que se procese el m\'etodo. Cuando
+se reduce una regla \texttt{Method}, el nodo \texttt{MethodNode} recibe las
+precondici\'on y postcondici\'on almacenadas:
+
+\begin{lstlisting}[style=cpp, caption={Vinculaci\'on de anotaciones al MethodNode}]
+Method : public_token static_token Tipo id pari pard Bloque {
+    MethodNode* m = new MethodNode($4->lexema, $3->tipo, $7, ...);
+    m->precondition.reset(g_pre);   // @pre almacenada globalmente
+    m->postcondition.reset(g_post); // @post almacenada globalmente
+    g_pre = g_post = nullptr;
+    $$ = m;
+}
+\end{lstlisting}
+
+\section{\'Arbol Sint\'actico Abstracto (AST)}
+
+El AST se representa mediante una jerarqu\'ia de clases C++ en
+\texttt{include/ASTNodes.h}.
+
+\subsection{Jerarqu\'ia de nodos}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  cls/.style={rectangle, draw, rounded corners=2pt,
+              minimum width=3cm, minimum height=0.6cm,
+              align=center, font=\small\ttfamily, fill=blue!8},
+  arr/.style={-Stealth, thick},
+  node distance=0.5cm and 1.2cm
+]
+\node[cls] (node)   {Node};
+\node[cls, below left=0.8cm and 1.5cm of node]  (stmt)  {StmtNode};
+\node[cls, below right=0.8cm and 1.5cm of node] (expr)  {ExprNode};
+
+\node[cls, below=0.5cm of stmt] (assign) {AssignNode};
+\node[cls, below=0.5cm of assign] (block)  {BlockNode};
+\node[cls, below=0.5cm of block]  (ifn)    {IfNode};
+\node[cls, below=0.5cm of ifn]    (whi)    {WhileNode};
+\node[cls, below=0.5cm of whi]    (met)    {MethodNode};
+\node[cls, below=0.5cm of met]    (ret)    {ReturnNode};
+
+\node[cls, below=0.5cm of expr]   (bin)    {BinaryExprNode};
+\node[cls, below=0.5cm of bin]    (una)    {UnaryExprNode};
+\node[cls, below=0.5cm of una]    (ide)    {IdentifierNode};
+\node[cls, below=0.5cm of ide]    (ilit)   {IntLiteralNode};
+\node[cls, below=0.5cm of ilit]   (flo)    {FloatLiteralNode};
+\node[cls, below=0.5cm of flo]    (cal)    {CallNode};
+\node[cls, below=0.5cm of cal]    (res)    {ResultNode};
+
+\draw[arr] (stmt) -- (node);
+\draw[arr] (expr) -- (node);
+\draw[arr] (assign) -- (stmt);
+\draw[arr] (block) -- (stmt);
+\draw[arr] (ifn) -- (stmt);
+\draw[arr] (whi) -- (stmt);
+\draw[arr] (met) -- (stmt);
+\draw[arr] (ret) -- (stmt);
+\draw[arr] (bin) -- (expr);
+\draw[arr] (una) -- (expr);
+\draw[arr] (ide) -- (expr);
+\draw[arr] (ilit) -- (expr);
+\draw[arr] (flo) -- (expr);
+\draw[arr] (cal) -- (expr);
+\draw[arr] (res) -- (expr);
+\end{tikzpicture}
+\caption{Jerarqu\'ia de nodos del AST (flecha = hereda de).}
+\label{fig:ast}
+\end{figure}
+
+\subsection{Nodos especiales para verificaci\'on}
+
+\begin{description}
+  \item[\texttt{ResultNode}] Representa la palabra reservada \texttt{result}
+    en las postcondiciones. Hace referencia al valor de retorno del m\'etodo sin
+    necesidad de nombrarlo expl\'icitamente.
+  \item[\texttt{MethodNode.precondition / .postcondition}] Campos
+    \texttt{unique\_ptr<ExprNode>} que almacenan las expresiones de las
+    anotaciones \texttt{@pre} y \texttt{@post}.
+  \item[\texttt{WhileNode.invariant / .variant}] Campos an\'alogos para las
+    anotaciones \texttt{@invariant} y \texttt{@variant} del bucle.
+\end{description}
+
+\begin{lstlisting}[style=cpp, caption={Nodo WhileNode con soporte de invariante}]
+class WhileNode : public StmtNode {
+public:
+    std::unique_ptr<ExprNode> condition;
+    std::unique_ptr<StmtNode> body;
+    std::unique_ptr<ExprNode> invariant;  // @invariant annotation
+    std::unique_ptr<ExprNode> variant;    // @variant annotation
+    ...
+};
+\end{lstlisting}

@@ -1,0 +1,134 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 10 – Suite de pruebas
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Suite de pruebas}
+\label{chap:pruebas}
+
+\section{Organización}
+
+Las pruebas se organizan en tres grupos principales:
+
+\begin{table}[H]
+  \centering
+  \caption{Grupos de pruebas}
+  \label{tab:grupos}
+  \begin{tabular}{llr}
+    \toprule
+    \textbf{Directorio}            & \textbf{Propósito}                        & \textbf{Tests} \\
+    \midrule
+    \texttt{tests/backend/}        & Compilación y ejecución completa           & 5 \\
+    \texttt{tests/semantic/}       & Errores semánticos esperados               & 3 \\
+    \texttt{tests/verification/}   & Verificación formal con Z3                 & 3 \\
+    \midrule
+    Total                          &                                            & 11 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+El script \texttt{tests/run\_tests.sh} ejecuta todos los grupos y
+reporta el resultado de cada prueba como \texttt{[PASS]} o \texttt{[FAIL]}.
+
+\section{Pruebas de backend}
+
+Cada prueba compila el fichero \texttt{.java}, ejecuta el binario
+resultante y compara la salida con el valor esperado.
+
+\begin{table}[H]
+  \centering
+  \caption{Pruebas de backend (compilación y ejecución)}
+  \label{tab:backend}
+  \begin{tabular}{lp{6cm}l}
+    \toprule
+    \textbf{Fichero}               & \textbf{Qué se verifica}                  & \textbf{Estado} \\
+    \midrule
+    \texttt{t01\_print.java}       & \texttt{System.out.println} de enteros     & PASS \\
+    \texttt{t02\_arithmetic.java}  & Las cuatro operaciones, módulo y precedencia & PASS \\
+    \texttt{t03\_if\_else.java}    & Condicionales con ramas vacías y anidadas  & PASS \\
+    \texttt{t04\_while.java}       & Bucles, suma acumulativa, retorno          & PASS \\
+    \texttt{t05\_functions.java}   & Llamadas entre métodos, paso de valores    & PASS \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Pruebas semánticas}
+
+Estos ficheros son programas \emph{incorrectos}: el compilador debe
+detectar el error semántico y terminar con código de salida distinto
+de cero.
+
+\begin{table}[H]
+  \centering
+  \caption{Pruebas de errores semánticos}
+  \label{tab:semantic}
+  \begin{tabular}{lp{6.5cm}l}
+    \toprule
+    \textbf{Fichero}               & \textbf{Error esperado}                   & \textbf{Estado} \\
+    \midrule
+    \texttt{sem01\_undeclared.java} & Variable usada sin declarar              & PASS \\
+    \texttt{sem02\_type\_error.java}& Asignación de \texttt{double} a \texttt{int} sin conversión & PASS \\
+    \texttt{sem03\_redecl.java}     & Redeclaración de variable en el mismo ámbito & PASS \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Pruebas de verificación formal}
+
+\begin{table}[H]
+  \centering
+  \caption{Pruebas de verificación con Z3}
+  \label{tab:verif}
+  \begin{tabular}{lp{5.5cm}ll}
+    \toprule
+    \textbf{Fichero}               & \textbf{Qué se verifica}  & \textbf{VCs} & \textbf{Estado} \\
+    \midrule
+    \texttt{demo\_verified.java}   & absValue, wrongMethod, sumLoop & 7 & PASS \\
+    \texttt{ver01\_simple.java}    & Método sin bucles, @post básico & 2 & PASS \\
+    \texttt{ver02\_invariant.java} & Invariante de bucle con variante & 5 & PASS \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Salida de ejemplo: \texttt{demo\_verified.java}}
+
+\begin{verbatim}
+$ ./compiler --verify tests/verification/demo_verified.java
+[OK]  [absValue] correccion (unsat)
+[OK]  [sumLoop] iniciacion del invariante (unsat)
+[OK]  [sumLoop] preservacion del invariante (unsat)
+[OK]  [sumLoop] uso del invariante (unsat)
+[OK]  [sumLoop] correccion (unsat)
+[OK]  [sumLoop] terminacion (unsat)
+[BUG] [wrongMethod] correccion (sat) <-- bug detectado
+\end{verbatim}
+
+\section{Script de ejecución}
+
+El script \texttt{tests/run\_tests.sh} automatiza todo el proceso:
+
+\begin{enumerate}
+  \item Compila el proyecto con \texttt{make}.
+  \item Ejecuta cada prueba de backend: compila el \texttt{.java} con
+    \texttt{./compiler}, ejecuta el binario y compara con
+    \texttt{expected/}.
+  \item Ejecuta las pruebas semánticas comprobando que el compilador
+    termina con código $\neq 0$.
+  \item Ejecuta las pruebas de verificación comprobando que Z3 esté
+    disponible en el \texttt{PATH}.
+  \item Imprime un resumen: \texttt{N/M tests passed}.
+\end{enumerate}
+
+\begin{verbatim}
+$ make && tests/run_tests.sh
+[PASS] t01_print
+[PASS] t02_arithmetic
+[PASS] t03_if_else
+[PASS] t04_while
+[PASS] t05_functions
+[PASS] sem01_undeclared
+[PASS] sem02_type_error
+[PASS] sem03_redecl
+[PASS] ver01_simple
+[PASS] ver02_invariant
+[PASS] demo_verified
+11/11 tests passed
+\end{verbatim}

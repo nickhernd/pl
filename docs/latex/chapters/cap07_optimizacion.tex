@@ -1,0 +1,110 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 7 – Optimizaciones sobre la IR
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Optimizaciones sobre la representación intermedia}
+\label{chap:optimizacion}
+
+\section{Introducción}
+
+Las optimizaciones se aplican sobre la \IR{} antes de la generación de
+código. Al operar sobre las cuádruplas —y no sobre el ensamblador— las
+optimizaciones son independientes de la arquitectura destino.
+
+El módulo \texttt{IROptimizer} implementa las siguientes pasadas:
+
+\begin{enumerate}
+  \item Eliminación de código muerto (\emph{dead code elimination}).
+  \item Plegado de constantes (\emph{constant folding}).
+  \item Propagación de copias (\emph{copy propagation}).
+\end{enumerate}
+
+\section{Eliminación de código muerto}
+
+Se eliminan cuádruplas que calculan un valor que nunca se usa
+(temporales sin ningún uso posterior) y cuádruplas que son
+literalmente inalcanzables (tras un \texttt{IR\_JMP} o \texttt{IR\_RETURN}
+incondicional antes de una etiqueta).
+
+\begin{definicion}[Código muerto]
+  Una cuádrupla $q = (op, a_1, a_2, t)$ es \emph{código muerto} si
+  $t$ no es una variable de usuario, no aparece como argumento en
+  ninguna cuádrupla posterior, y $op \notin \{IR\_CALL, IR\_READ\_INT,
+  IR\_READ\_REAL, IR\_PRINT\_*, IR\_JMP, IR\_JZ, IR\_LABEL, IR\_RETURN,
+  IR\_HALT\}$ (instrucciones con efecto de borde).
+\end{definicion}
+
+La eliminación se realiza en dos pasadas:
+
+\begin{enumerate}
+  \item Calcular el conjunto $\textit{used}$ de todas las direcciones que
+    aparecen como argumento en alguna cuádrupla.
+  \item Eliminar las cuádruplas cuyo resultado no está en $\textit{used}$
+    y que no tienen efecto de borde.
+\end{enumerate}
+
+\section{Plegado de constantes}
+
+Si ambos operandos de una operación aritmética o de comparación son constantes
+literales, se puede calcular el resultado en tiempo de compilación:
+
+\begin{ejemplo}
+  La cuádrupla $(IR\_ADD, 3, 5, t_0)$ se reemplaza directamente por
+  $t_0 \leftarrow 8$, es decir, una cuádrupla $(IR\_COPY, 8, -, t_0)$.
+\end{ejemplo}
+
+\begin{table}[H]
+  \centering
+  \caption{Operaciones que admiten plegado de constantes}
+  \label{tab:folding}
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Operación} & \textbf{Resultado} \\
+    \midrule
+    $\text{int} + \text{int}$   & \texttt{constInt(a+b)} \\
+    $\text{int} - \text{int}$   & \texttt{constInt(a-b)} \\
+    $\text{int} * \text{int}$   & \texttt{constInt(a*b)} \\
+    $\text{int} / \text{int}$, $b \neq 0$ & \texttt{constInt(a/b)} \\
+    $\text{double} \oplus \text{double}$ & \texttt{constReal(a $\oplus$ b)} \\
+    $a == a$, $a \leq a$        & \texttt{constInt(1)} \\
+    $a < a$, $a \neq a$         & \texttt{constInt(0)} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Propagación de copias}
+
+Si una cuádrupla tiene la forma $(IR\_COPY, a, -, x)$ y $a$ es un
+argumento constante o una variable que no se modifica en el tramo
+hasta el uso siguiente de $x$, se puede sustituir $x$ por $a$
+directamente, eliminando la copia.
+
+\begin{ejemplo}
+  La secuencia:
+  \begin{verbatim}
+  (IR_COPY, 42, -, t0)
+  (IR_ADD,  t0,  5, t1)
+  \end{verbatim}
+  se optimiza a:
+  \begin{verbatim}
+  (IR_ADD, 42, 5, t1)   ->  (IR_COPY, 47, -, t1)  [plegado posterior]
+  \end{verbatim}
+\end{ejemplo}
+
+\section{Impacto de las optimizaciones}
+
+\begin{table}[H]
+  \centering
+  \caption{Reducción de cuádruplas en los programas de prueba}
+  \label{tab:opt-impact}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Programa} & \textbf{Sin opt.} & \textbf{Con opt.} & \textbf{Reducción} \\
+    \midrule
+    \texttt{t01\_print.java}      & 8  & 5  & $-37.5\%$ \\
+    \texttt{t02\_arithmetic.java} & 22 & 14 & $-36.4\%$ \\
+    \texttt{t03\_if\_else.java}   & 18 & 12 & $-33.3\%$ \\
+    \texttt{t04\_while.java}      & 26 & 20 & $-23.1\%$ \\
+    \texttt{t05\_functions.java}  & 15 & 11 & $-26.7\%$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}

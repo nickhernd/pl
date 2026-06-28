@@ -160,9 +160,9 @@ while (i < n)
 ### How it works
 
 1. `Predicate.h` — logical predicate hierarchy (VarPred, BinaryPred, ImpliesPred, …)
-2. `WPCalculus.h` — Weakest Precondition calculus (VER-4 through VER-6, skeleton)
-3. `VCGenerator.h` — generates Verification Conditions `P ==> WP(body, Q)` (VER-7, skeleton)
-4. `SMTExporter.h` — serialises VCs to SMT-Lib2 for Z3 (VER-8, skeleton)
+2. `WPCalculus.h` — Weakest Precondition calculus with continuation-passing for early returns
+3. `VCGenerator.h` — generates Verification Conditions: correctness (VER-7), loop invariants (VER-6), division-by-zero (VER-9), termination (VER-11)
+4. `SMTExporter.h` — serialises VCs to SMT-Lib2, runs Z3, reports results (VER-8, VER-10)
 
 Install Z3:
 ```bash
@@ -170,8 +170,27 @@ sudo pacman -S z3    # Arch
 sudo apt install z3  # Debian/Ubuntu
 ```
 
-Implemented so far: predicate hierarchy, annotation parsing, AST storage, `result` keyword.  
-Pending (intentional — learning exercise): WP rules, VC generation, SMT export, Z3 integration.
+### Example output
+
+```
+$ ./compiler --verify tests/verification/demo_verified.java
+=== Verificacion Formal ===
+  [OK]  [absValue] correctitud
+  [BUG] [wrongMethod] correctitud — contraejemplo encontrado
+  [OK]  [sumLoop] correctitud
+  [OK]  [sumLoop] invariant iniciacion
+  [OK]  [sumLoop] invariant preservacion
+  [OK]  [sumLoop] invariant uso
+  [OK]  [sumLoop] terminacion (variante >= 0)
+
+  Resultado: 6 OK, 1 BUGS
+```
+
+### Loop invariant notes
+
+Loop invariants must be **strong enough** for the verifier to prove preservation:
+- Weak: `@invariant s >= 0` — may fail preservation if loop variables are unconstrained
+- Strong: `@invariant s >= 0 && i >= 1` — captures all relevant loop state
 
 ## Project Structure
 
@@ -210,7 +229,7 @@ Pending (intentional — learning exercise): WP rules, VC generation, SMT export
 | 2 — Semantics | Type checking, symbol tables | Complete |
 | 3 — IR | 3-address code, optimiser | Complete |
 | 4 — Backend x86-64 | Code gen, register alloc, calling convention, scanf | Complete |
-| 5 — Formal Verification | Hoare logic, WP calculus, Z3 integration | In progress |
+| 5 — Formal Verification | Hoare logic, WP calculus, Z3 integration | Complete |
 
 ## References
 

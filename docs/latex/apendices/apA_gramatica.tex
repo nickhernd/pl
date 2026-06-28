@@ -1,0 +1,119 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Apéndice A – Gramática BNF completa del subconjunto de Java
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Gramática BNF del subconjunto Java}
+\label{apend:gramatica}
+
+Las reglas se presentan en notación EBNF. Los nombres entre
+\texttt{<>} son no terminales; los literales entre comillas simples
+son terminales. Los corchetes denotan opcionalidad; las llaves,
+cero o más repeticiones; las alternativas se separan con \texttt{|}.
+
+\section{Estructura del programa}
+
+\begin{lstlisting}[style=pseudo, caption={Producción raíz}]
+<Program>  ::= 'public' 'class' ID '{' <Members>* '}'
+
+<Members>  ::= <Annotation>
+            |  <Method>
+
+<Annotation> ::= '@pre'       <Expr>
+              |  '@post'      <Expr>
+              |  '@invariant' <Expr>
+              |  '@variant'   <Expr>
+\end{lstlisting}
+
+\section{Declaración de métodos}
+
+\begin{lstlisting}[style=pseudo, caption={Métodos y parámetros}]
+<Method>  ::= 'public' 'static' <Type> ID '(' [<Params>] ')' <Block>
+           |  'public' 'static' 'void' ID '(' [<Params>] ')' <Block>
+
+<Params>  ::= <Type> ID { ',' <Type> ID }
+
+<Type>    ::= 'int' | 'double' | 'boolean' | 'String[]'
+\end{lstlisting}
+
+\section{Sentencias}
+
+\begin{lstlisting}[style=pseudo, caption={Sentencias del subconjunto}]
+<Block>   ::= '{' <Stmt>* '}'
+
+<Stmt>    ::= <VarDecl>
+           |  <Assign>
+           |  <If>
+           |  <While>
+           |  <Return>
+           |  <MethodCall> ';'
+           |  <PrintStmt>
+
+<VarDecl> ::= <Type> ID ';'
+<Assign>  ::= ID '=' <Expr> ';'
+
+<If>      ::= 'if' '(' <Expr> ')' <Block>
+           |  'if' '(' <Expr> ')' <Block> 'else' <Block>
+
+<While>   ::= 'while' '(' <Expr> ')' <Annotation>* <Block>
+
+<Return>  ::= 'return' <Expr> ';'
+
+<PrintStmt> ::= 'System.out.println' '(' <Expr> ')' ';'
+             |  'System.out.print'   '(' <Expr> ')' ';'
+\end{lstlisting}
+
+\section{Expresiones}
+
+\begin{lstlisting}[style=pseudo, caption={Gramática de expresiones (precedencia ascendente)}]
+<Expr>  ::= <Expr> '||' <Expr>
+         |  <Expr> '&&' <Expr>
+         |  '!' <Expr>
+         |  <Expr> ('==' | '!=' | '<' | '<=' | '>' | '>=') <Expr>
+         |  <Expr> ('+' | '-') <Expr>
+         |  <Expr> ('*' | '/' | '%') <Expr>
+         |  '-' <Expr>             -- negacion unaria
+         |  '(' <Expr> ')'
+         |  ID
+         |  INT_LIT
+         |  REAL_LIT
+         |  'true' | 'false'
+         |  'result'               -- solo en anotaciones @post
+         |  <MethodCall>
+
+<MethodCall> ::= ID '(' [<Args>] ')'
+<Args>       ::= <Expr> { ',' <Expr> }
+\end{lstlisting}
+
+\section{Anotaciones de verificación}
+
+Las anotaciones de verificación (Milestone~5) son un mecanismo de
+extensión léxica: los tokens \texttt{@pre}, \texttt{@post},
+\texttt{@invariant} y \texttt{@variant} se reconocen por el analizador
+léxico (Flex) y se integran en la gramática como sentencias de primer
+nivel dentro de \texttt{Members}, o como prefijos de un \texttt{While}.
+
+Las expresiones de anotación comparten la misma gramática que
+\texttt{<Expr>}, con el añadido del símbolo \texttt{result} que
+referencia el valor de retorno del método en la postcondición.
+
+\section{Precedencia y asociatividad de operadores}
+
+\begin{table}[H]
+  \centering
+  \caption{Precedencia (mayor nivel = mayor prioridad)}
+  \label{tab:prec}
+  \begin{tabular}{cll}
+    \toprule
+    \textbf{Nivel} & \textbf{Operadores} & \textbf{Asociatividad} \\
+    \midrule
+    1 & \texttt{||} & izquierda \\
+    2 & \texttt{\&\&} & izquierda \\
+    3 & \texttt{!} & derecha (prefijo) \\
+    4 & \texttt{== !=} & izquierda \\
+    5 & \texttt{< <= > >=} & izquierda \\
+    6 & \texttt{+ -} & izquierda \\
+    7 & \texttt{* / \%} & izquierda \\
+    8 & unario \texttt{-} & derecha (prefijo) \\
+    9 & llamada a función, literal, identificador & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}

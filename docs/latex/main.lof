@@ -1,0 +1,16 @@
+\babel@toc {spanish}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Pipeline completo del compilador JavaSubset. La rama verde (verificacion formal) se activa con la opcion \texttt {--verify}.}}{16}{figure.caption.6}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Jerarquia del patron Visitor en el compilador.}}{17}{figure.caption.8}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Jerarqu\'ia de nodos del AST (flecha = hereda de).}}{21}{figure.caption.10}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }

@@ -1,0 +1,132 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 5 – Representación Intermedia
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Representación intermedia}
+\label{chap:ir}
+
+\section{Motivación}
+
+La representación intermedia (\IR{}) desacopla el front-end
+(específico del lenguaje fuente) del back-end (específico de la
+arquitectura destino). Esto permite, en principio, añadir nuevos
+lenguajes fuente o nuevas arquitecturas destino sin reescribir
+el compilador completo.
+
+\section{Formato de cuádruplas}
+
+La \IR{} consiste en una secuencia plana de \textbf{cuádruplas} de la forma:
+\[
+  (op,\; \mathit{arg}_1,\; \mathit{arg}_2,\; \mathit{result})
+\]
+
+\begin{table}[H]
+  \centering
+  \caption{Opcodes de la representación intermedia}
+  \label{tab:opcodes}
+  \begin{tabular}{llp{7cm}}
+    \toprule
+    \textbf{Opcode}   & \textbf{Ejemplo}          & \textbf{Significado} \\
+    \midrule
+    \texttt{IR\_ADD}  & $(+, a, b, t_0)$         & $t_0 \leftarrow a + b$ \\
+    \texttt{IR\_SUB}  & $(-, a, b, t_0)$         & $t_0 \leftarrow a - b$ \\
+    \texttt{IR\_MUL}  & $(*, a, b, t_0)$         & $t_0 \leftarrow a * b$ \\
+    \texttt{IR\_DIV}  & $(/, a, b, t_0)$         & $t_0 \leftarrow a / b$ \\
+    \texttt{IR\_MOD}  & $(\%, a, b, t_0)$        & $t_0 \leftarrow a \bmod b$ \\
+    \texttt{IR\_COPY} & $(=, a, -, x)$           & $x \leftarrow a$ \\
+    \texttt{IR\_JZ}   & $(jz, cond, L, -)$       & \texttt{if} cond $= 0$ \texttt{goto} $L$ \\
+    \texttt{IR\_JMP}  & $(jmp, L, -, -)$         & \texttt{goto} $L$ \\
+    \texttt{IR\_LABEL}& $(label, L, -, -)$       & marca de salto $L$ \\
+    \texttt{IR\_CALL} & $(call, f, -, t_0)$      & $t_0 \leftarrow f()$ \\
+    \texttt{IR\_RETURN}& $(ret, a, -, -)$        & devuelve $a$ \\
+    \texttt{IR\_PRINT\_INT}& $(print\_int, a, -, -)$ & imprime entero \\
+    \texttt{IR\_READ\_INT} & $(read\_int, -, -, t_0)$ & lee entero de stdin \\
+    \texttt{IR\_HALT} & $(halt, -, -, -)$        & fin del programa \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Argumentos IR}
+
+Cada argumento de una cuádrupla es un \texttt{IRArg} que puede ser:
+
+\begin{itemize}
+  \item \textbf{Constante entera}: \texttt{IRArg::constInt(42)}
+  \item \textbf{Constante real}: \texttt{IRArg::constReal(3.14)}
+  \item \textbf{Variable}: \texttt{IRArg::var("x", addr, tipo)}
+  \item \textbf{Temporal}: \texttt{prog.newTemp(tipo)} — generado automáticamente
+  \item \textbf{Etiqueta}: \texttt{IRArg::label("L0")}
+  \item \textbf{Función}: \texttt{IRArg::func("absValue")}
+  \item \textbf{Ninguno}: \texttt{IRArg::none()}
+\end{itemize}
+
+\section{Traducción de construcciones}
+
+\subsection{Expresión aritmética}
+
+\begin{ejemplo}
+La expresión \texttt{(a + b) * c} se traduce como:
+\[
+  (IR\_ADD, a, b, t_0),\quad (IR\_MUL, t_0, c, t_1)
+\]
+\end{ejemplo}
+
+\subsection{Sentencia if-else}
+
+\begin{lstlisting}[style=java, caption={if-else en código fuente}]
+if (x > 0) y = x; else y = -x;
+\end{lstlisting}
+
+\begin{verbatim}
+(IR_GT,    x, 0,  t0)      // t0 = x > 0
+(IR_JZ,    t0, L_else, -)  // if !t0 goto L_else
+(IR_COPY,  x, -, y)        // then: y = x
+(IR_JMP,   L_end, -, -)
+(IR_LABEL, L_else, -, -)
+(IR_NEG,   x, -, t1)       // t1 = -x
+(IR_COPY,  t1, -, y)       // else: y = -x
+(IR_LABEL, L_end, -, -)
+\end{verbatim}
+
+\subsection{Bucle while}
+
+\begin{verbatim}
+(IR_LABEL, L_start, -, -)
+(IR_LTE,   i, 5, t0)
+(IR_JZ,    t0, L_end, -)
+... cuerpo ...
+(IR_JMP,   L_start, -, -)
+(IR_LABEL, L_end, -, -)
+\end{verbatim}
+
+\subsection{Llamada a función}
+
+\begin{verbatim}
+(IR_FUNC_BEGIN, absValue, -, -)
+... cuerpo de absValue ...
+(IR_RETURN, t3, -, -)
+(IR_FUNC_END, absValue, -, -)
+
+... en el punto de llamada ...
+(IR_CALL, absValue, -, t5)  // t5 = absValue()
+\end{verbatim}
+
+\section{Visualización de la IR}
+
+Con el flag \texttt{--ir} el compilador imprime las cuádruplas en formato
+legible por el programador:
+
+\begin{verbatim}
+$ ./compiler --ir tests/backend/t04_while.java 2>&1 | head -20
+[FUNC_BEGIN] sumToFive
+[LABEL] L0
+[LTE] i 5 -> t0
+[JZ] t0 -> L1
+[ADD] s i -> t1
+[COPY] t1 -> s
+[ADD] i 1 -> t2
+[COPY] t2 -> i
+[JMP] L0
+[LABEL] L1
+[RETURN] s
+[FUNC_END] sumToFive
+\end{verbatim}

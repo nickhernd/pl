@@ -1,0 +1,103 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {chapter}{\numberline {1}Introducción}{13}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Motivación y objetivos}{13}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Subconjunto del lenguaje}{13}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Herramientas utilizadas}{14}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Estructura del documento}{14}{section.1.4}%
+\contentsline {chapter}{\numberline {2}Arquitectura del compilador}{15}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Vista global del pipeline}{15}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Representaciones intermedias}{16}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Modos de operacion}{16}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Patron Visitor}{17}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Estructura de directorios}{17}{section.2.5}%
+\contentsline {chapter}{\numberline {3}Frontend: An\'alisis l\'exico-sint\'actico}{19}{chapter.3}%
+\contentsline {section}{\numberline {3.1}An\'alisis l\'exico}{19}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Categor\'ias de tokens}{19}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Tokens especiales para verificaci\'on}{19}{subsection.3.1.2}%
+\contentsline {section}{\numberline {3.2}An\'alisis sint\'actico}{20}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Estructura gramatical principal}{20}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Gesti\'on de anotaciones formales}{20}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}\'Arbol Sint\'actico Abstracto (AST)}{20}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Jerarqu\'ia de nodos}{21}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Nodos especiales para verificaci\'on}{21}{subsection.3.3.2}%
+\contentsline {chapter}{\numberline {4}Análisis semántico}{23}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Tabla de símbolos}{23}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Comprobaciones semánticas}{23}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Reglas de coerción de tipos}{24}{subsection.4.2.1}%
+\contentsline {section}{\numberline {4.3}Ejemplo de error semántico detectado}{24}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Visita a nodos de especificación formal}{24}{section.4.4}%
+\contentsline {chapter}{\numberline {5}Representación intermedia}{25}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Motivación}{25}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Formato de cuádruplas}{25}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Argumentos IR}{25}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Traducción de construcciones}{26}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Expresión aritmética}{26}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Sentencia if-else}{26}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Bucle while}{26}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Llamada a función}{27}{subsection.5.4.4}%
+\contentsline {section}{\numberline {5.5}Visualización de la IR}{27}{section.5.5}%
+\contentsline {chapter}{\numberline {6}Backend x86-64}{29}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Convención de llamada System V AMD64 ABI}{29}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Marco de pila}{29}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Generación de código por opcode}{30}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}Operaciones aritméticas enteras}{30}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}Saltos condicionales}{30}{subsection.6.3.2}%
+\contentsline {subsection}{\numberline {6.3.3}Llamadas a función}{30}{subsection.6.3.3}%
+\contentsline {subsection}{\numberline {6.3.4}E/S con \texttt {printf} y \texttt {scanf}}{30}{subsection.6.3.4}%
+\contentsline {section}{\numberline {6.4}Ejemplo completo de programa compilado}{31}{section.6.4}%
+\contentsline {chapter}{\numberline {7}Optimizaciones sobre la representación intermedia}{33}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Introducción}{33}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Eliminación de código muerto}{33}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Plegado de constantes}{34}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Propagación de copias}{34}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Impacto de las optimizaciones}{34}{section.7.5}%
+\contentsline {chapter}{\numberline {8}Asignación de registros: Chaitin-Briggs}{35}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Motivación}{35}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Registros disponibles}{35}{section.8.2}%
+\contentsline {section}{\numberline {8.3}Algoritmo}{35}{section.8.3}%
+\contentsline {subsection}{\numberline {8.3.1}Fase 1: Análisis de vivacidad}{35}{subsection.8.3.1}%
+\contentsline {subsection}{\numberline {8.3.2}Fase 2: Grafo de interferencias}{36}{subsection.8.3.2}%
+\contentsline {subsection}{\numberline {8.3.3}Fase 3: Coloración del grafo}{36}{subsection.8.3.3}%
+\contentsline {section}{\numberline {8.4}Uso del resultado}{37}{section.8.4}%
+\contentsline {chapter}{\numberline {9}Verificación formal: Lógica de Hoare y cálculo WP}{39}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Fundamentos teóricos}{39}{section.9.1}%
+\contentsline {subsection}{\numberline {9.1.1}Lógica de Hoare}{39}{subsection.9.1.1}%
+\contentsline {subsection}{\numberline {9.1.2}Cálculo de Precondiciones Más Débiles}{39}{subsection.9.1.2}%
+\contentsline {section}{\numberline {9.2}Reglas del cálculo WP}{40}{section.9.2}%
+\contentsline {subsection}{\numberline {9.2.1}Regla de la asignación (VER-4)}{40}{subsection.9.2.1}%
+\contentsline {subsection}{\numberline {9.2.2}Regla de la composición (VER-5)}{40}{subsection.9.2.2}%
+\contentsline {paragraph}{Retornos anticipados.}{40}{section*.18}%
+\contentsline {subsection}{\numberline {9.2.3}Regla del condicional}{41}{subsection.9.2.3}%
+\contentsline {subsection}{\numberline {9.2.4}Regla del retorno}{41}{subsection.9.2.4}%
+\contentsline {subsection}{\numberline {9.2.5}Regla del bucle con invariante (VER-6)}{41}{subsection.9.2.5}%
+\contentsline {section}{\numberline {9.3}Jerarquía de predicados}{41}{section.9.3}%
+\contentsline {section}{\numberline {9.4}Generación de condiciones de verificación (VER-7)}{42}{section.9.4}%
+\contentsline {section}{\numberline {9.5}Exportación a SMT-Lib2 (VER-8)}{42}{section.9.5}%
+\contentsline {section}{\numberline {9.6}Interpretación de resultados (VER-10)}{43}{section.9.6}%
+\contentsline {section}{\numberline {9.7}Ejemplo completo de verificación}{43}{section.9.7}%
+\contentsline {subsection}{\numberline {9.7.1}Función \texttt {absValue}}{43}{subsection.9.7.1}%
+\contentsline {subsection}{\numberline {9.7.2}Función \texttt {wrongMethod} (bug intencional)}{43}{subsection.9.7.2}%
+\contentsline {subsection}{\numberline {9.7.3}Suma con invariante de bucle}{44}{subsection.9.7.3}%
+\contentsline {section}{\numberline {9.8}Nota sobre invariantes}{44}{section.9.8}%
+\contentsline {chapter}{\numberline {10}Suite de pruebas}{45}{chapter.10}%
+\contentsline {section}{\numberline {10.1}Organización}{45}{section.10.1}%
+\contentsline {section}{\numberline {10.2}Pruebas de backend}{45}{section.10.2}%
+\contentsline {section}{\numberline {10.3}Pruebas semánticas}{46}{section.10.3}%
+\contentsline {section}{\numberline {10.4}Pruebas de verificación formal}{46}{section.10.4}%
+\contentsline {subsection}{\numberline {10.4.1}Salida de ejemplo: \texttt {demo\_verified.java}}{46}{subsection.10.4.1}%
+\contentsline {section}{\numberline {10.5}Script de ejecución}{46}{section.10.5}%
+\contentsline {chapter}{\numberline {A}Gramática BNF del subconjunto Java}{49}{appendix.Alph1}%
+\contentsline {section}{\numberline {A.1}Estructura del programa}{49}{section.Alph1.1}%
+\contentsline {section}{\numberline {A.2}Declaración de métodos}{49}{section.Alph1.2}%
+\contentsline {section}{\numberline {A.3}Sentencias}{49}{section.Alph1.3}%
+\contentsline {section}{\numberline {A.4}Expresiones}{50}{section.Alph1.4}%
+\contentsline {section}{\numberline {A.5}Anotaciones de verificación}{50}{section.Alph1.5}%
+\contentsline {section}{\numberline {A.6}Precedencia y asociatividad de operadores}{51}{section.Alph1.6}%
+\contentsline {chapter}{\numberline {B}Referencia de instrucciones x86-64}{53}{appendix.Alph2}%
+\contentsline {section}{\numberline {B.1}Instrucciones de transferencia de datos}{53}{section.Alph2.1}%
+\contentsline {section}{\numberline {B.2}Instrucciones aritméticas enteras}{53}{section.Alph2.2}%
+\contentsline {section}{\numberline {B.3}Instrucciones de comparación y salto}{54}{section.Alph2.3}%
+\contentsline {section}{\numberline {B.4}Instrucciones de control de flujo y llamadas}{54}{section.Alph2.4}%
+\contentsline {section}{\numberline {B.5}Instrucciones de punto flotante SSE2}{55}{section.Alph2.5}%
+\contentsline {section}{\numberline {B.6}Directivas del ensamblador}{55}{section.Alph2.6}%
+\contentsline {section}{\numberline {B.7}Convención de registro de marcos (\texttt {\%rbp})}{55}{section.Alph2.7}%

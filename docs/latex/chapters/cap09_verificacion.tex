@@ -1,0 +1,352 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 9 – Verificación Formal: Lógica de Hoare y Cálculo WP
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Verificación formal: Lógica de Hoare y cálculo WP}
+\label{chap:verificacion}
+
+\section{Fundamentos teóricos}
+
+\subsection{Lógica de Hoare}
+
+La \textbf{Lógica de Hoare}~\cite{hoare1969} es un sistema formal para
+razonar sobre la corrección de programas imperativos. Introduce las
+\emph{tripletas de Hoare}:
+\[
+  \hoare{P}{S}{Q}
+\]
+que se leen: ``si la precondición $P$ vale antes de ejecutar $S$,
+entonces la postcondición $Q$ vale tras la ejecución de $S$
+(asumiendo que $S$ termina)''.
+
+\begin{definicion}[Corrección parcial]
+  $\hoare{P}{S}{Q}$ es \emph{parcialmente correcta} si para toda
+  ejecución de $S$ que parte de un estado en el que $P$ vale y
+  que termina, el estado final satisface $Q$.
+\end{definicion}
+
+\begin{definicion}[Corrección total]
+  $\hoare{P}{S}{Q}$ es \emph{totalmente correcta} si además
+  toda ejecución de $S$ que parte de un estado en el que $P$ vale
+  termina necesariamente.
+\end{definicion}
+
+\subsection{Cálculo de Precondiciones Más Débiles}
+
+\textbf{Dijkstra}~\cite{dijkstra1976} introduce el \emph{transformador
+de predicados} $\WP{S}{Q}$: la \emph{precondición más débil} de $S$
+con respecto a $Q$, es decir, el predicado más débil (el que restringe
+menos el estado inicial) tal que:
+\[
+  \hoare{\WP{S}{Q}}{S}{Q}
+\]
+
+La condición de verificación principal para un método anotado es:
+\[
+  \mathit{VC} \;:\; P \Rightarrow \WP{\mathit{body}}{Q}
+\]
+
+Si esta fórmula es \textbf{válida} (lo comprueba Z3 como UNSAT de su negación),
+el método es parcialmente correcto.
+
+\section{Reglas del cálculo WP}
+
+\subsection{Regla de la asignación (VER-4)}
+
+\begin{regla}[Asignación]
+\[
+  \WP{x := e}{Q} \;=\; \subst{Q}{x}{e}
+\]
+donde $\subst{Q}{x}{e}$ denota $Q$ con cada aparición libre de $x$
+sustituida por $e$.
+\end{regla}
+
+\begin{ejemplo}
+  $\WP{x := x+1}{x > 5} = (x+1) > 5$
+\end{ejemplo}
+
+\subsection{Regla de la composición (VER-5)}
+
+\begin{regla}[Composición]
+\[
+  \WP{S_1;\,S_2}{Q} \;=\; \WP{S_1}{\WP{S_2}{Q}}
+\]
+\end{regla}
+
+Esto implica procesar la secuencia de sentencias en \emph{orden inverso},
+comenzando por la postcondición $Q$ y propagando la precondición hacia
+atrás.
+
+\paragraph{Retornos anticipados.}
+La regla de composición naive es incorrecta en presencia de \texttt{return}
+dentro de ramas \texttt{if}. Para la secuencia:
+\[
+  \texttt{if}(B)\;\texttt{return}\;e_1;\;\;\texttt{return}\;e_2;
+\]
+la regla correcta es:
+\[
+  \WP{\cdot}{Q} \;=\; (B \Rightarrow \subst{Q}{\mathtt{result}}{e_1})
+                \;\wedge\; (\neg B \Rightarrow \subst{Q}{\mathtt{result}}{e_2})
+\]
+
+La implementación usa \textbf{continuaciones} (CPS): cuando se encuentra
+un \texttt{return}, se usa $Q$ directamente (no la continuación de la
+composición):
+
+\begin{lstlisting}[style=cpp, caption={wpSeq con continuaciones para retornos anticipados}]
+static Predicate* wpSeq(const vector<const StmtNode*>& stmts,
+                        int idx, const Predicate* Q) {
+    if (idx >= stmts.size()) return Q->clone();
+    const StmtNode* s = stmts[idx];
+    // return: termina el camino, usa Q directamente
+    if (auto* r = dynamic_cast<const ReturnNode*>(s))
+        return wpReturn(r, Q);
+    // if: bifurca la continuacion
+    if (auto* i = dynamic_cast<const IfNode*>(s)) {
+        Predicate* B = fromExpr(i->condition.get());
+        vector<const StmtNode*> cont(stmts.begin()+idx+1, stmts.end());
+        Predicate* wp1 = wpBranchAndCont(i->thenPart.get(), cont, Q);
+        Predicate* wp2 = wpBranchAndCont(i->elsePart.get(), cont, Q);
+        return new AndPred(new ImpliesPred(B->clone(), wp1),
+                           new ImpliesPred(new NotPred(B),  wp2));
+    }
+    // asignacion: WP(x:=e; resto, Q) = WP(resto, Q)[e/x]
+    if (auto* a = dynamic_cast<const AssignNode*>(s)) {
+        Predicate* restWP = wpSeq(stmts, idx+1, Q);
+        return wpAssign(a, restWP);
+    }
+    return wpSeq(stmts, idx+1, Q);  // otras: sin efecto logico
+}
+\end{lstlisting}
+
+\subsection{Regla del condicional}
+
+\begin{regla}[Condicional]
+\[
+  \WP{\texttt{if}(B)\;S_1\;\texttt{else}\;S_2}{Q}
+  \;=\;
+  (B \Rightarrow \WP{S_1}{Q}) \;\wedge\; (\neg B \Rightarrow \WP{S_2}{Q})
+\]
+\end{regla}
+
+\subsection{Regla del retorno}
+
+\begin{regla}[Return]
+\[
+  \WP{\texttt{return}\;e}{Q} \;=\; \subst{Q}{\mathtt{result}}{e}
+\]
+\end{regla}
+
+\subsection{Regla del bucle con invariante (VER-6)}
+
+Para la verificación de bucles se requiere una \emph{anotación de invariante}
+$I$ suministrada por el programador:
+
+\begin{regla}[Bucle con invariante]
+  Para $\texttt{while}(B)\;\{S\}$ con invariante $I$ y postcondición $Q$,
+  se generan tres \emph{condiciones de verificación}:
+  \begin{align*}
+    \mathit{VC}_1 \;(\text{iniciación})\; &: P \Rightarrow \WP{S_{\text{antes}}}{I} \\
+    \mathit{VC}_2 \;(\text{preservación})\; &: (I \wedge B) \Rightarrow \WP{S_{\text{body}}}{I} \\
+    \mathit{VC}_3 \;(\text{uso})\; &: (I \wedge \neg B) \Rightarrow \WP{S_{\text{después}}}{Q}
+  \end{align*}
+  y el WP del bucle en sí es $I$ (asumiendo la corrección de $I$).
+\end{regla}
+
+La precondición más fuerte al entrar en el bucle
+($\WP{S_{\text{antes}}}{I}$) se computa correctamente aplicando
+\texttt{wpSeq} a las sentencias que preceden al bucle dentro del bloque.
+
+\section{Jerarquía de predicados}
+
+Los predicados lógicos se representan mediante la clase abstracta
+\texttt{Predicate} y sus subclases:
+
+\begin{table}[H]
+  \centering
+  \caption{Clases de predicados implementadas}
+  \label{tab:preds}
+  \begin{tabular}{llll}
+    \toprule
+    \textbf{Clase}    & \textbf{toString()}      & \textbf{toSMT()} & \textbf{Uso} \\
+    \midrule
+    \texttt{TruePred}     & \texttt{true}        & \texttt{true}   & Postcondición trivial \\
+    \texttt{FalsePred}    & \texttt{false}       & \texttt{false}  & VC insatisfacible \\
+    \texttt{VarPred(x)}   & \texttt{x}           & \texttt{x}      & Variable de programa \\
+    \texttt{ResultPred}   & \texttt{result}      & \texttt{result} & Valor de retorno en @post \\
+    \texttt{IntLitPred(n)}& $n$                  & $n$             & Constante entera \\
+    \texttt{BinaryPred(op,l,r)} & \texttt{(l op r)} & \texttt{(op l r)} & Aritmética/comparación \\
+    \texttt{AndPred(l,r)} & \texttt{(l \&\& r)}  & \texttt{(and l r)} & Conjunción \\
+    \texttt{OrPred(l,r)}  & \texttt{(l || r)}    & \texttt{(or l r)}  & Disyunción \\
+    \texttt{NotPred(p)}   & \texttt{(!p)}        & \texttt{(not p)}   & Negación \\
+    \texttt{ImpliesPred(a,c)} & \texttt{(a ==> c)} & \texttt{(=> a c)} & Implicación \\
+    \texttt{NegPred(p)}   & \texttt{(-p)}        & \texttt{(- p)}  & Negación aritmética \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+La operación clave es la \textbf{sustitución textual}:
+$\texttt{subst}(x, e)$ devuelve una copia del predicado donde cada
+\texttt{VarPred(x)} se reemplaza por $e$:
+
+\begin{lstlisting}[style=cpp, caption={Sustitución en BinaryPred}]
+Predicate* BinaryPred::subst(const string& var, const Predicate* e) const {
+    return new BinaryPred(op, left->subst(var, e), right->subst(var, e));
+}
+Predicate* VarPred::subst(const string& var, const Predicate* e) const {
+    if (name == var) return e->clone();  // sustituir
+    return new VarPred(name);           // no afectada
+}
+\end{lstlisting}
+
+\section{Generación de condiciones de verificación (VER-7)}
+
+El \texttt{VCGenerator} genera cuatro tipos de VCs:
+
+\begin{enumerate}
+  \item \textbf{Corrección del método}: $P \Rightarrow \WP{\mathit{body}}{Q}$
+  \item \textbf{Invariante de bucle} (iniciación, preservación, uso)
+  \item \textbf{Seguridad de memoria} (VER-9): para cada división,
+    $P \Rightarrow \mathit{divisor} \neq 0$
+  \item \textbf{Terminación} (VER-11): para cada bucle con \texttt{@variant} $V$,
+    $(I \wedge B) \Rightarrow V \geq 0$
+\end{enumerate}
+
+\section{Exportación a SMT-Lib2 (VER-8)}
+
+Cada VC se exporta como un bloque SMT-Lib2. La negación de la VC se envía
+a Z3: si Z3 responde \textbf{UNSAT}, la negación es insatisfacible, por lo
+tanto la VC es \textbf{válida} (el programa es correcto en ese punto).
+
+\begin{lstlisting}[style=smt, caption={Formato SMT-Lib2 para una VC}]
+(push 1)
+; [absValue] correctitud
+(declare-fun x () Int)     ; variables locales del metodo
+(assert (not              ; negacion de la VC
+    (=> true              ; precondicion P
+        (and
+            (=> (< (- 5) 0) (>= (- (- 5)) 0))
+            (=> (not (< (- 5) 0)) (>= (- 5) 0))
+        )
+    )
+))
+(check-sat)               ; Z3 responde UNSAT = VC valida
+(pop 1)
+\end{lstlisting}
+
+\section{Interpretación de resultados (VER-10)}
+
+\begin{table}[H]
+  \centering
+  \caption{Interpretación de la respuesta de Z3}
+  \label{tab:z3resp}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Respuesta Z3} & \textbf{Significado}         & \textbf{Reporte} \\
+    \midrule
+    \texttt{unsat}    & VC válida — programa correcto      & \textcolor{green!50!black}{[OK]} \\
+    \texttt{sat}      & VC inválida — contraejemplo existe & \textcolor{red!80!black}{[BUG]} \\
+    \texttt{unknown}  & Timeout o lógica demasiado compleja & \textcolor{orange}{[?]} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Ejemplo completo de verificación}
+
+\subsection{Función \texttt{absValue}}
+
+\begin{lstlisting}[style=java, caption={Método verificado: valor absoluto}]
+@pre  true
+@post result >= 0
+public static int absValue() {
+    int x;
+    x = -5;
+    if (x < 0) return -x;
+    return x;
+}
+\end{lstlisting}
+
+Cálculo WP (con continuaciones):
+
+\begin{align*}
+  &\WP{\texttt{return x}}{Q_0} = Q_0[\texttt{x}/\texttt{result}] = x \geq 0 \\
+  &\WP{\texttt{if}(x<0)\;\texttt{return}\;{-x};\;\texttt{return x}}{Q_0} \\
+  &\quad = (x < 0 \Rightarrow Q_0[{-x}/\texttt{result}])
+         \wedge (x \geq 0 \Rightarrow Q_0[\texttt{x}/\texttt{result}]) \\
+  &\quad = (x < 0 \Rightarrow -x \geq 0) \wedge (x \geq 0 \Rightarrow x \geq 0) \\
+  &\WP{x := -5}{\ldots} = [\text{sustituyendo } x = -5] \\
+  &\quad = ((-5) < 0 \Rightarrow 5 \geq 0) \wedge ((-5) \geq 0 \Rightarrow (-5) \geq 0) \\
+  &\quad = (\top \Rightarrow \top) \wedge (\bot \Rightarrow \bot) = \top
+\end{align*}
+
+VC principal: $\true \Rightarrow \true$ — Z3 responde \texttt{unsat} $\Rightarrow$ \textbf{[OK]}.
+
+\subsection{Función \texttt{wrongMethod} (bug intencional)}
+
+\begin{lstlisting}[style=java, caption={Método con bug intencional}]
+@post result > 10
+public static int wrongMethod() {
+    int x;
+    x = 5;
+    return x;
+}
+\end{lstlisting}
+
+$\WP{\texttt{return x}}{Q_1} = Q_1[\texttt{x}/\texttt{result}] = x > 10$
+
+$\WP{x := 5}{x > 10} = 5 > 10 = \false$
+
+VC: $\true \Rightarrow \false$ — Z3 responde \texttt{sat} con modelo $x=5 \Rightarrow$ \textbf{[BUG]}.
+
+\subsection{Suma con invariante de bucle}
+
+\begin{lstlisting}[style=java, caption={Suma 1..5 con invariante completo}]
+@post result >= 0
+public static int sumLoop() {
+    int i; int s;
+    i = 1; s = 0;
+    while (i <= 5)
+    @invariant s >= 0 && i >= 1
+    @variant   6 - i
+    {
+        s = s + i;
+        i = i + 1;
+    }
+    return s;
+}
+\end{lstlisting}
+
+\begin{table}[H]
+  \centering
+  \caption{VCs generadas para \texttt{sumLoop} y resultados de Z3}
+  \label{tab:sumloop-vcs}
+  \begin{tabular}{lp{7.5cm}l}
+    \toprule
+    \textbf{VC} & \textbf{Fórmula} & \textbf{Z3} \\
+    \midrule
+    Correctitud &
+      $\true \Rightarrow (0\geq 0 \wedge 1\geq 1)$ &
+      UNSAT \textcolor{green!60!black}{[OK]} \\
+    Iniciación &
+      $\true \Rightarrow (0\geq 0 \wedge 1\geq 1)$ &
+      UNSAT \textcolor{green!60!black}{[OK]} \\
+    Preservación &
+      $(s\geq 0 \wedge i\geq 1 \wedge i\leq 5) \Rightarrow ((s+i)\geq 0 \wedge (i+1)\geq 1)$ &
+      UNSAT \textcolor{green!60!black}{[OK]} \\
+    Uso &
+      $(s\geq 0 \wedge i\geq 1 \wedge i>5) \Rightarrow s\geq 0$ &
+      UNSAT \textcolor{green!60!black}{[OK]} \\
+    Terminación &
+      $(s\geq 0 \wedge i\geq 1 \wedge i\leq 5) \Rightarrow (6-i)\geq 0$ &
+      UNSAT \textcolor{green!60!black}{[OK]} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Nota sobre invariantes}
+
+Un invariante debe ser \emph{suficientemente fuerte} para que las tres VCs sean
+válidas. Un invariante débil como $s \geq 0$ no captura que $i \geq 1$, lo que
+hace que Z3 encuentre contraejemplos con $i$ negativo para la VC de
+preservación. La fortaleza del invariante es responsabilidad del programador;
+el verificador comprueba que el invariante dado es \emph{correcto} (no que sea
+\emph{completo}).

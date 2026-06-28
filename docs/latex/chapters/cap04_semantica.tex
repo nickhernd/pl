@@ -1,0 +1,102 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 4 – Análisis Semántico
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Análisis semántico}
+\label{chap:semantica}
+
+\section{Tabla de símbolos}
+
+La tabla de símbolos (\texttt{TablaSimbolos}) es una estructura encadenada de
+ámbitos. Cada \texttt{BlockNode} posee su propia \texttt{TablaSimbolos} apuntando
+a la tabla del bloque padre, lo que implementa el alcance léxico estándar de Java.
+
+\begin{lstlisting}[style=cpp, caption={Estructura de la tabla de símbolos}]
+struct Simbolo {
+    string nombre;
+    unsigned tipo;          // ENTERO=0, REAL=1, LOGICO=2, SCVAR=3
+    unsigned dir;           // desplazamiento en la pila (para IR/x86)
+    unsigned tam;
+    bool isConstant;        // declarado con 'final'
+    bool isAssigned;        // asignado al menos una vez
+    bool isFunction;        // true if this symbol is a method
+    int  returnType;        // return type (if isFunction)
+};
+
+class TablaSimbolos {
+    TablaSimbolos* padre;           // parent scope (lexical scoping)
+    vector<Simbolo> simbolos;
+    bool set(Simbolo s);            // insert; returns false if duplicate
+    Simbolo* get(string nombre);    // lookup in this scope and parent
+};
+\end{lstlisting}
+
+\section{Comprobaciones semánticas}
+
+El \texttt{SemanticVisitor} recorre el AST tipado e implementa:
+
+\begin{enumerate}
+  \item \textbf{Declaración antes de uso}: verifica que toda variable
+    referenciada esté declarada en algún ámbito visible.
+  \item \textbf{Compatibilidad de tipos}: comprueba que los operandos de
+    cada operador sean compatibles (p.ej. no se puede sumar un \texttt{int}
+    y un \texttt{boolean}).
+  \item \textbf{Constantes}: detecta reasignaciones a variables \texttt{final}.
+  \item \textbf{Tipo de retorno}: verifica que las sentencias \texttt{return}
+    devuelvan un valor compatible con el tipo de retorno del método.
+  \item \textbf{Código inalcanzable}: detecta sentencias tras un
+    \texttt{return} incondicional.
+  \item \textbf{Llamadas a funciones}: comprueba que el nombre de la función
+    esté declarado y tiene el tipo de retorno correcto.
+\end{enumerate}
+
+\subsection{Reglas de coerción de tipos}
+
+\begin{table}[H]
+  \centering
+  \caption{Tabla de coerción de tipos para operaciones binarias}
+  \label{tab:coercion}
+  \begin{tabular}{cccl}
+    \toprule
+    \textbf{Operando izq.} & \textbf{Op.} & \textbf{Operando der.} & \textbf{Tipo resultado} \\
+    \midrule
+    \texttt{int}    & $+,-,*,/,\%$  & \texttt{int}    & \texttt{int} \\
+    \texttt{double} & $+,-,*,/$     & \texttt{double} & \texttt{double} \\
+    \texttt{int}    & $+,-,*,/$     & \texttt{double} & \texttt{double} (promoución) \\
+    cualquiera      & $==,!=,<,>$   & mismo           & \texttt{boolean} \\
+    \texttt{boolean}& $\&\&, \|$    & \texttt{boolean}& \texttt{boolean} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Ejemplo de error semántico detectado}
+
+\begin{lstlisting}[style=java, caption={Reasignación de constante — error semántico}]
+public class EjError {
+    public static void main(String[] args) {
+        final int MAX;
+        MAX = 100;
+        MAX = 200;  // Error: reasignacion de constante 'MAX'
+    }
+}
+\end{lstlisting}
+
+El compilador emite:
+\begin{verbatim}
+Error semantico (5,9): reasignacion a constante 'MAX'
+\end{verbatim}
+
+\section{Visita a nodos de especificación formal}
+
+El \texttt{SemanticVisitor} también visita los nodos de anotación para
+comprobar su coherencia:
+
+\begin{lstlisting}[style=cpp, caption={Visita a ResultNode en el análisis semántico}]
+void visit(ResultNode* node) override {
+    if (currentReturnType == -1) {
+        error("'result' solo puede usarse en postcondiciones "
+              "de metodos no void");
+        return;
+    }
+    node->type = currentReturnType;
+}
+\end{lstlisting}

@@ -1,0 +1,168 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Apéndice B – Referencia de instrucciones x86-64
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Referencia de instrucciones x86-64}
+\label{apend:instrucciones}
+
+Se documentan las instrucciones x86-64 generadas por el backend del
+compilador. Se usa sintaxis AT\&T (fuente a la izquierda, destino a
+la derecha).
+
+\section{Instrucciones de transferencia de datos}
+
+\begin{table}[H]
+  \centering
+  \caption{Instrucciones de movimiento}
+  \label{tab:mov}
+  \begin{tabular}{lp{8cm}}
+    \toprule
+    \textbf{Instrucción}        & \textbf{Efecto} \\
+    \midrule
+    \texttt{movq src, dst}      & $dst \leftarrow src$ (64 bits) \\
+    \texttt{movl src, dst}      & $dst \leftarrow src$ (32 bits, zero-extends a 64) \\
+    \texttt{movzbq src, dst}    & Extiende byte a 64 bits con ceros (\emph{zero-extend}) \\
+    \texttt{leaq src, dst}      & $dst \leftarrow$ dirección efectiva de \textit{src} \\
+    \texttt{pushq src}          & Empuja \textit{src} en la pila (\reg{rsp} -= 8) \\
+    \texttt{popq dst}           & Extrae de la pila en \textit{dst} (\reg{rsp} += 8) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Instrucciones aritméticas enteras}
+
+\begin{table}[H]
+  \centering
+  \caption{Aritmética entera (64 bits)}
+  \label{tab:arith-ref}
+  \begin{tabular}{lp{8cm}}
+    \toprule
+    \textbf{Instrucción}        & \textbf{Efecto} \\
+    \midrule
+    \texttt{addq src, dst}      & $dst \leftarrow dst + src$ \\
+    \texttt{subq src, dst}      & $dst \leftarrow dst - src$ \\
+    \texttt{imulq src}          & $\reg{rdx}:\reg{rax} \leftarrow \reg{rax} \times src$ (con signo) \\
+    \texttt{idivq src}          & $\reg{rax} \leftarrow \reg{rdx}:\reg{rax} \div src$; $\reg{rdx} \leftarrow \text{resto}$ \\
+    \texttt{cqto}               & Signo-extiende \reg{rax} a \reg{rdx}:\reg{rax} (necesario antes de \texttt{idivq}) \\
+    \texttt{negq dst}           & $dst \leftarrow -dst$ \\
+    \texttt{incq dst}           & $dst \leftarrow dst + 1$ \\
+    \texttt{decq dst}           & $dst \leftarrow dst - 1$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Instrucciones de comparación y salto}
+
+\begin{table}[H]
+  \centering
+  \caption{Comparación y saltos}
+  \label{tab:jmp}
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Instrucción}        & \textbf{Efecto / Condición} \\
+    \midrule
+    \texttt{cmpq src, dst}      & Calcula $dst - src$; pone flags (SF, ZF, OF) \\
+    \texttt{testq src, dst}     & Calcula $dst \;\mathtt{AND}\; src$; pone ZF \\
+    \midrule
+    \texttt{je  label}          & Salta si $ZF = 1$ (equal / zero) \\
+    \texttt{jne label}          & Salta si $ZF = 0$ \\
+    \texttt{jl  label}          & Salta si $SF \neq OF$ (less, con signo) \\
+    \texttt{jle label}          & Salta si $ZF = 1$ o $SF \neq OF$ \\
+    \texttt{jg  label}          & Salta si $ZF = 0$ y $SF = OF$ (greater) \\
+    \texttt{jge label}          & Salta si $SF = OF$ \\
+    \texttt{jmp label}          & Salta incondicionalmente \\
+    \midrule
+    \texttt{sete  al}           & $al \leftarrow (ZF = 1)$ \\
+    \texttt{setne al}           & $al \leftarrow (ZF = 0)$ \\
+    \texttt{setl  al}           & $al \leftarrow (SF \neq OF)$ \\
+    \texttt{setle al}           & $al \leftarrow (ZF \vee SF \neq OF)$ \\
+    \texttt{setg  al}           & $al \leftarrow (\neg ZF \wedge SF = OF)$ \\
+    \texttt{setge al}           & $al \leftarrow (SF = OF)$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Instrucciones de control de flujo y llamadas}
+
+\begin{table}[H]
+  \centering
+  \caption{Llamadas a función y retorno}
+  \label{tab:call}
+  \begin{tabular}{lp{8cm}}
+    \toprule
+    \textbf{Instrucción}          & \textbf{Efecto} \\
+    \midrule
+    \texttt{call label}           & Empuja \reg{rip}+siguiente y salta a \textit{label} \\
+    \texttt{ret}                  & Extrae dirección de retorno de la pila y salta a ella \\
+    \texttt{nop}                  & Sin operación (relleno de alineación) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Instrucciones de punto flotante SSE2}
+
+\begin{table}[H]
+  \centering
+  \caption{Instrucciones SSE2 para \texttt{double}}
+  \label{tab:sse}
+  \begin{tabular}{lp{8cm}}
+    \toprule
+    \textbf{Instrucción}          & \textbf{Efecto} \\
+    \midrule
+    \texttt{movsd src, dst}       & Mueve un \texttt{double} \\
+    \texttt{addsd src, dst}       & $dst \leftarrow dst + src$ (double) \\
+    \texttt{subsd src, dst}       & $dst \leftarrow dst - src$ \\
+    \texttt{mulsd src, dst}       & $dst \leftarrow dst \times src$ \\
+    \texttt{divsd src, dst}       & $dst \leftarrow dst / src$ \\
+    \texttt{ucomisd src, dst}     & Comparación de doubles (sin signo, pone ZF/PF/CF) \\
+    \texttt{cvtsi2sd src, dst}    & Convierte entero a double \\
+    \texttt{cvttsd2si src, dst}   & Convierte double a entero (trunca) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Directivas del ensamblador}
+
+\begin{table}[H]
+  \centering
+  \caption{Directivas GAS usadas por el compilador}
+  \label{tab:directivas}
+  \begin{tabular}{lp{8cm}}
+    \toprule
+    \textbf{Directiva}            & \textbf{Efecto} \\
+    \midrule
+    \texttt{.globl sym}           & Exporta el símbolo \textit{sym} (visible al enlazador) \\
+    \texttt{.text}                & Sección de código ejecutable \\
+    \texttt{.section .rodata}     & Sección de datos de solo lectura (strings de formato) \\
+    \texttt{.string "..."}        & Emite una cadena terminada en \verb|\0| \\
+    \texttt{.quad n}              & Emite una constante de 8 bytes \\
+    \texttt{.align n}             & Alinea la posición actual a $2^n$ bytes \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Convención de registro de marcos (\texttt{\%rbp})}
+
+El compilador usa el marco de pila estándar:
+
+\begin{verbatim}
+        Alta dirección
+    +------------------+
+    | ... args caller  |
+    +------------------+ <- %rbp + 16 (primer arg si se pasa en pila)
+    | return address   |
+    +------------------+ <- %rbp + 8
+    | saved %rbp       |
+    +------------------+ <- %rbp  <-- base del marco de la funcion
+    | local var 0      |
+    +------------------+ <- %rbp - 8
+    | local var 1      |
+    +------------------+ <- %rbp - 16
+    | temporales ...   |
+    +------------------+ <- %rsp (top de la pila)
+        Baja dirección
+\end{verbatim}
+
+El tamaño total del marco se calcula como
+$\lceil n \cdot 8 / 16 \rceil \times 16$ bytes para mantener
+\reg{rsp} alineado a 16 bytes antes de cualquier \texttt{call},
+según exige la ABI System V AMD64.

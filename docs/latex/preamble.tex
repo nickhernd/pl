@@ -1,0 +1,183 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  preamble.tex  –  Paquetes y configuración global
+% ─────────────────────────────────────────────────────────────────────────────
+
+% ── Codificación y lengua ────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+
+% ── Tipografía ───────────────────────────────────────────────────────────────
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ── Matemáticas ──────────────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+
+% ── Geometría de página ──────────────────────────────────────────────────────
+\usepackage[
+  a4paper,
+  top=2.5cm, bottom=2.5cm,
+  left=3cm,  right=2.5cm,
+  headheight=15pt
+]{geometry}
+
+% ── Gráficos y diagramas ─────────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc, backgrounds}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% ── Código fuente ────────────────────────────────────────────────────────────
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0.13,0.55,0.13}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{codeblue}{rgb}{0.0,0.2,0.7}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+\definecolor{keywordcolor}{rgb}{0.0,0.2,0.7}
+
+\lstdefinestyle{java}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{keywordcolor}\bfseries,
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=4,
+  language=Java,
+  morekeywords={@pre,@post,@invariant,@variant,result},
+  frame=single,
+  rulecolor=\color{gray!40},
+}
+
+\lstdefinestyle{asm}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{codeblue}\bfseries,
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  numbersep=5pt,
+  frame=single,
+  rulecolor=\color{gray!40},
+  language={[x86masm]Assembler},
+}
+
+\lstdefinestyle{smt}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{codepurple}\bfseries,
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  numbersep=5pt,
+  frame=single,
+  rulecolor=\color{gray!40},
+  morekeywords={declare-fun,assert,check-sat,get-model,push,pop,exit,set-logic,not,and,or,=>,>=,<=,+,-,*,/},
+}
+
+\lstdefinestyle{cpp}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{keywordcolor}\bfseries,
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  numbersep=5pt,
+  frame=single,
+  rulecolor=\color{gray!40},
+  language=C++,
+}
+
+\lstset{style=java}   % estilo por defecto
+
+% ── Tablas ───────────────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
+
+% ── Hiperenlaces ─────────────────────────────────────────────────────────────
+\usepackage[
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=codeblue,
+  urlcolor=codeblue,
+  pdftitle={Compilador JavaSubset → x86-64 con Verificación Formal},
+  pdfauthor={nickhernd},
+]{hyperref}
+
+% ── Encabezados y pies de página ─────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\small\nouppercase{\leftmark}}
+\fancyhead[LO]{\small\nouppercase{\rightmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Entornos matemáticos ─────────────────────────────────────────────────────
+\theoremstyle{definition}
+\newtheorem{definicion}{Definición}[chapter]
+\newtheorem{ejemplo}{Ejemplo}[chapter]
+\newtheorem{regla}{Regla}[chapter]
+
+\theoremstyle{plain}
+\newtheorem{teorema}{Teorema}[chapter]
+\newtheorem{lema}{Lema}[chapter]
+
+\theoremstyle{remark}
+\newtheorem{nota}{Nota}[chapter]
+\newtheorem{observacion}{Observación}[chapter]
+
+% ── Pseudocódigo (sin paquete algorithm2e) ───────────────────────────────────
+\lstdefinestyle{pseudo}{
+  backgroundcolor=\color{backcolour},
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  captionpos=b,
+  frame=single,
+  rulecolor=\color{gray!40},
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  numbersep=5pt,
+}
+
+% ── Miscelánea ───────────────────────────────────────────────────────────────
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{csquotes}
+% backnaur no disponible; gramáticas se presentan en lstlisting
+
+% ── Macros del proyecto ──────────────────────────────────────────────────────
+\newcommand{\jss}{\texttt{JavaSubset}}
+\newcommand{\IR}{\textsc{ir}}
+\newcommand{\WP}[2]{\mathrm{WP}(#1,\,#2)}
+\newcommand{\SP}[2]{\mathrm{SP}(#1,\,#2)}
+\newcommand{\hoare}[3]{\{#1\}\;#2\;\{#3\}}
+\newcommand{\subst}[3]{#1[#3/#2]}           % P[e/x]
+\newcommand{\true}{\mathtt{true}}
+\newcommand{\false}{\mathtt{false}}
+\newcommand{\reg}[1]{\texttt{\%#1}}

@@ -2266,18 +2266,22 @@ yyreturnlab:
 #include "IRLinearizer.h"
 #include "X86Generator.h"
 #include "RegisterAllocator.h"
+#include "SMTExporter.h"
+#include <fstream>
 
 int main(int argc, char *argv[]) {
     bool showIR      = false;
     bool showRegAlloc = false;
+    bool verify      = false;
     const char* filename = nullptr;
 
     for (int i = 1; i < argc; ++i) {
         if      (strcmp(argv[i], "--ir")       == 0) showIR = true;
         else if (strcmp(argv[i], "--reg-alloc") == 0) showRegAlloc = true;
+        else if (strcmp(argv[i], "--verify")   == 0) verify = true;
         else if (argv[i][0] != '-')                  filename = argv[i];
         else {
-            fprintf(stderr, "Uso: %s [--ir] [--reg-alloc] <fichero.java>\n", argv[0]);
+            fprintf(stderr, "Uso: %s [--ir] [--reg-alloc] [--verify] <fichero.java>\n", argv[0]);
             return 1;
         }
     }
@@ -2299,6 +2303,62 @@ int main(int argc, char *argv[]) {
         std::cerr << "Error de compilacion: errores semanticos." << std::endl;
         delete rootAST;
         return 1;
+    }
+
+    // [VER-7/8/10] Modo verificación formal: genera VCs y consulta Z3
+    if (verify) {
+        std::vector<VC> allVCs;
+        ProgramNode* prog_ = dynamic_cast<ProgramNode*>(rootAST);
+        BlockNode* root_   = prog_ ? prog_->root.get() : nullptr;
+        if (!root_) { std::cerr << "Error interno: AST invalido\n"; return 1; }
+        for (const auto& stmt : root_->statements) {
+            auto* m = dynamic_cast<MethodNode*>(stmt.get());
+            if (!m) continue;
+            auto vcs  = VCGenerator::generate(m);
+            auto safe = VCGenerator::generateSafety(m);
+            auto term = VCGenerator::generateTermination(m);
+            for (auto& v : vcs)  allVCs.push_back(std::move(v));
+            for (auto& v : safe) allVCs.push_back(std::move(v));
+            for (auto& v : term) allVCs.push_back(std::move(v));
+        }
+
+        if (allVCs.empty()) {
+            std::cerr << "No hay metodos con @post. Añade @pre/@post para verificar.\n";
+            delete rootAST;
+            return 0;
+        }
+
+        // Determina el fichero .smt2 de salida
+        std::string smtFile = "/tmp/verify.smt2";
+        if (filename) {
+            std::string base(filename);
+            size_t dot = base.rfind('.');
+            if (dot != std::string::npos) base = base.substr(0, dot);
+            smtFile = base + ".smt2";
+        }
+
+        // Escribe el fichero SMT2
+        std::ofstream smtOut(smtFile);
+        SMTExporter exporter(smtOut);
+        exporter.exportAll(allVCs, ts);
+        smtOut.close();
+        std::cerr << "SMT2 escrito en: " << smtFile << "\n";
+
+        // Muestra las VCs en modo legible
+        VCGenerator::dump(allVCs, std::cerr);
+
+        // Intenta ejecutar Z3
+        std::string z3out = SMTExporter::runZ3(smtFile);
+        if (!z3out.empty()) {
+            std::cout << "=== Verificacion Formal ===\n";
+            SMTExporter::reportResults(z3out, allVCs);
+        } else {
+            std::cerr << "Z3 no encontrado. Instala con: sudo pacman -S z3\n";
+            std::cerr << "Verifica manualmente: z3 " << smtFile << "\n";
+        }
+
+        delete rootAST;
+        return 0;
     }
 
     // Pipeline: AST -> IR (cuadruplas) -> optimizacion -> x86-64

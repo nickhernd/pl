@@ -1,0 +1,73 @@
+% ─────────────────────────────────────────────────────────────────────────────
+%  Capítulo 1 – Introducción
+% ─────────────────────────────────────────────────────────────────────────────
+\chapter{Introducción}
+\label{chap:intro}
+
+\section{Motivación y objetivos}
+
+El diseño e implementación de un compilador desde cero constituye uno de los
+proyectos más completos en el ámbito de la Ingeniería del Software, pues pone
+en juego simultáneamente teoría de lenguajes formales, estructuras de datos
+avanzadas, generación de código máquina y, en este caso, lógica matemática
+aplicada a la verificación de programas.
+
+El proyecto \textbf{JavaSubset Compiler} tiene como objetivo construir un
+compilador completo para un subconjunto estáticamente tipado de Java con destino
+a código nativo x86-64. El proceso se organiza en cinco fases o \emph{milestones}:
+
+\begin{enumerate}[label=\textbf{Fase \arabic*.}]
+  \item \textbf{Frontend}: análisis léxico y sintáctico, construcción del AST.
+  \item \textbf{Análisis semántico}: resolución de nombres, comprobación de tipos.
+  \item \textbf{Representación intermedia}: traducción a código de tres direcciones.
+  \item \textbf{Backend x86-64}: generación de ensamblador, asignación de registros.
+  \item \textbf{Verificación formal}: Lógica de Hoare, cálculo WP, integración con Z3.
+\end{enumerate}
+
+\section{Subconjunto del lenguaje}
+
+El lenguaje fuente es un subconjunto tipado de Java con las siguientes
+características:
+
+\begin{table}[H]
+  \centering
+  \caption{Características del subconjunto Java soportado}
+  \label{tab:lenguaje}
+  \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Categoría}   & \textbf{Construcciones soportadas} \\
+    \midrule
+    Tipos primitivos     & \texttt{int}, \texttt{double}, \texttt{boolean} \\
+    Declaraciones        & Variables locales, constantes \texttt{final} \\
+    Operadores           & $+$, $-$, $*$, $/$ , $\%$, comparación, lógicos \\
+    Control de flujo     & \texttt{if}/\texttt{else}, \texttt{while} \\
+    Métodos              & Estáticos sin parámetros, \texttt{return} \\
+    E/S estándar         & \texttt{System.out.print/println}, \texttt{Scanner} \\
+    Anotaciones formales & \texttt{@pre}, \texttt{@post}, \texttt{@invariant}, \texttt{@variant} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Herramientas utilizadas}
+
+\begin{description}
+  \item[\textbf{Flex 2.6}] Generador de analizadores léxicos a partir de
+    expresiones regulares. Produce la función \texttt{yylex()} en C.
+  \item[\textbf{GNU Bison 3.x}] Generador de analizadores sintácticos LALR(1).
+    Produce el autómata de análisis y las acciones semánticas en C.
+  \item[\textbf{GCC / G++ 11}] Compilador del código C/C++ generado.
+    Se usa también para ensamblar y enlazar el código x86-64 producido.
+  \item[\textbf{Z3 4.x}] Solver SMT de Microsoft Research. Recibe fórmulas
+    en formato SMT-Lib2 y determina su satisfacibilidad (SAT/UNSAT).
+\end{description}
+
+\section{Estructura del documento}
+
+El documento sigue la estructura del pipeline del compilador:
+el capítulo~\ref{chap:arquitectura} presenta la vista global del sistema;
+los capítulos~\ref{chap:frontend}–\ref{chap:backend} describen cada fase
+de compilación; el capítulo~\ref{chap:optimizacion} detalla las
+optimizaciones sobre la RI; el capítulo~\ref{chap:registro} explica la
+asignación de registros; el capítulo~\ref{chap:verificacion} desarrolla
+la verificación formal; y el capítulo~\ref{chap:pruebas} recoge los
+resultados experimentales.
