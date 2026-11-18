@@ -1,8 +1,7 @@
 \begin{thebibliography}{1}
 
 \bibitem{chaitin1982}
-Gregory~J. Chaitin, Marc~A. Auslander, Ashok~K. Chandra, John Cocke, Martin~E.
-  Hopkins, and Peter~W. Markstein.
+Gregory~J. Chaitin, Marc~A. Auslander, Ashok~K. Chandra, John Cocke, Martin~E. Hopkins, and Peter~W. Markstein.
 \newblock Register allocation via coloring.
 \newblock {\em Computer Languages}, 6(1):47--57, 1981.
 
